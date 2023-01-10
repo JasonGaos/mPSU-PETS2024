@@ -16,7 +16,6 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/include/x86_64-linux-gnu/gnu/stubs.h
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h
  /usr/include/x86_64-linux-gnu/c++/11/bits/cpu_defines.h
- /usr/include/c++/11/pstl/pstl_config.h
  /usr/include/c++/11/ostream
  /usr/include/c++/11/ios
  /usr/include/c++/11/iosfwd
@@ -128,9 +127,6 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/include/c++/11/ext/alloc_traits.h
  /usr/include/c++/11/bits/alloc_traits.h
  /usr/include/c++/11/bits/stl_construct.h
- /usr/include/c++/11/string_view
- /usr/include/c++/11/bits/functional_hash.h
- /usr/include/c++/11/bits/string_view.tcc
  /usr/include/c++/11/ext/string_conversions.h
  /usr/include/c++/11/cstdlib
  /usr/include/stdlib.h
@@ -162,6 +158,7 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/include/asm-generic/errno-base.h
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h
  /usr/include/c++/11/bits/charconv.h
+ /usr/include/c++/11/bits/functional_hash.h
  /usr/include/c++/11/bits/basic_string.tcc
  /usr/include/c++/11/bits/locale_classes.tcc
  /usr/include/c++/11/system_error
@@ -208,14 +205,8 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/include/c++/11/bits/atomic_base.h
  /usr/include/c++/11/bits/atomic_lockfree_defines.h
  /usr/include/c++/11/backward/auto_ptr.h
- /usr/include/c++/11/pstl/glue_memory_defs.h
- /usr/include/c++/11/pstl/execution_defs.h
  /usr/local/include/cryptoTools/Common/config.h
  /usr/local/include/cryptoTools/Common/block.h
- /usr/include/string.h
- /usr/include/strings.h
- /usr/include/c++/11/cassert
- /usr/include/assert.h
  /usr/lib/gcc/x86_64-linux-gnu/11/include/emmintrin.h
  /usr/lib/gcc/x86_64-linux-gnu/11/include/xmmintrin.h
  /usr/lib/gcc/x86_64-linux-gnu/11/include/mmintrin.h
@@ -227,32 +218,15 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/lib/gcc/x86_64-linux-gnu/11/include/mwaitintrin.h
  /usr/lib/gcc/x86_64-linux-gnu/11/include/popcntintrin.h
  /usr/lib/gcc/x86_64-linux-gnu/11/include/wmmintrin.h
- /usr/local/include/nonstd/span.hpp
- /usr/include/c++/11/algorithm
- /usr/include/c++/11/bits/stl_algo.h
- /usr/include/c++/11/bits/algorithmfwd.h
- /usr/include/c++/11/bits/stl_heap.h
- /usr/include/c++/11/bits/uniform_int_dist.h
- /usr/include/c++/11/pstl/glue_algorithm_defs.h
- /usr/include/c++/11/functional
- /usr/include/c++/11/bits/std_function.h
- /usr/include/c++/11/unordered_map
- /usr/include/c++/11/bits/hashtable.h
- /usr/include/c++/11/bits/hashtable_policy.h
- /usr/include/c++/11/bits/enable_special_members.h
- /usr/include/c++/11/bits/node_handle.h
- /usr/include/c++/11/bits/unordered_map.h
- /usr/include/c++/11/bits/erase_if.h
- /usr/include/c++/11/vector
- /usr/include/c++/11/bits/stl_vector.h
- /usr/include/c++/11/bits/stl_bvector.h
- /usr/include/c++/11/bits/vector.tcc
- /usr/include/c++/11/cstddef
+ /usr/local/include/cryptoTools/gsl/span
+ /usr/local/include/cryptoTools/gsl/gsl_assert
+ /usr/local/include/cryptoTools/gsl/gsl_byte
+ /usr/local/include/cryptoTools/gsl/gsl_util
  /usr/include/c++/11/iterator
  /usr/include/c++/11/bits/stream_iterator.h
- /usr/local/include/cryptoTools/Common/Bit.h
  /usr/include/c++/11/limits
- /usr/include/c++/11/cstring
+ /usr/include/string.h
+ /usr/include/strings.h
  /usr/local/include/relic/relic_bn.h
  /usr/local/include/relic/relic_conf.h
  /usr/local/include/relic/relic_label.h
@@ -265,7 +239,11 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/local/include/relic/relic_bn.h
  /usr/local/include/cryptoTools/Crypto/PRNG.h
  /usr/local/include/cryptoTools/Crypto/AES.h
- /usr/local/include/cryptoTools/Common/Aligned.h
+ /usr/include/c++/11/vector
+ /usr/include/c++/11/bits/stl_vector.h
+ /usr/include/c++/11/bits/stl_bvector.h
+ /usr/include/c++/11/bits/vector.tcc
+ /usr/include/c++/11/cstring
  /usr/local/include/cryptoTools/Crypto/RandomOracle.h
  /usr/local/include/cryptoTools/Crypto/Blake2.h
  /usr/local/include/cryptoTools/Crypto/blake2/c/blake2.h
@@ -283,7 +261,9 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/include/c++/11/condition_variable
  /usr/include/c++/11/atomic
  /usr/include/c++/11/bits/atomic_futex.h
+ /usr/include/c++/11/bits/std_function.h
  /usr/include/c++/11/bits/std_thread.h
+ /usr/include/c++/11/functional
  /usr/local/include/boost/asio.hpp
  /usr/local/include/boost/asio/associated_allocator.hpp
  /usr/local/include/boost/asio/detail/config.hpp
@@ -291,6 +271,7 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/local/include/boost/config/user.hpp
  /usr/local/include/boost/config/detail/select_compiler_config.hpp
  /usr/local/include/boost/config/compiler/gcc.hpp
+ /usr/include/c++/11/cstddef
  /usr/local/include/boost/config/detail/select_stdlib_config.hpp
  /usr/include/c++/11/version
  /usr/local/include/boost/config/stdlib/libstdcpp3.hpp
@@ -328,6 +309,11 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/local/include/boost/current_function.hpp
  /usr/local/include/boost/cstdint.hpp
  /usr/local/include/boost/config/workaround.hpp
+ /usr/local/include/boost/align/aligned_alloc.hpp
+ /usr/local/include/boost/align/detail/aligned_alloc_posix.hpp
+ /usr/local/include/boost/align/detail/is_alignment.hpp
+ /usr/local/include/boost/assert.hpp
+ /usr/include/assert.h
  /usr/local/include/boost/asio/execution/receiver_invocation_error.hpp
  /usr/local/include/boost/asio/execution/impl/receiver_invocation_error.ipp
  /usr/local/include/boost/asio/execution/set_done.hpp
@@ -370,7 +356,6 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/local/include/boost/asio/traits/static_query.hpp
  /usr/local/include/boost/asio/execution/any_executor.hpp
  /usr/local/include/boost/asio/detail/assert.hpp
- /usr/local/include/boost/assert.hpp
  /usr/local/include/boost/asio/detail/cstddef.hpp
  /usr/local/include/boost/asio/detail/executor_function.hpp
  /usr/local/include/boost/asio/detail/handler_alloc_helpers.hpp
@@ -447,6 +432,7 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/local/include/boost/system/detail/throws.hpp
  /usr/local/include/boost/asio/detail/impl/throw_error.ipp
  /usr/local/include/boost/system/system_error.hpp
+ /usr/include/c++/11/cassert
  /usr/local/include/boost/asio/error.hpp
  /usr/local/include/boost/cerrno.hpp
  /usr/include/netdb.h
@@ -484,7 +470,6 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/local/include/boost/asio/traits/bulk_execute_member.hpp
  /usr/local/include/boost/asio/traits/bulk_execute_free.hpp
  /usr/local/include/boost/asio/execution/context.hpp
- /usr/include/c++/11/any
  /usr/local/include/boost/asio/execution/context_as.hpp
  /usr/local/include/boost/asio/execution/mapping.hpp
  /usr/local/include/boost/asio/execution/occupancy.hpp
@@ -639,6 +624,10 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/local/include/boost/asio/buffer.hpp
  /usr/local/include/boost/asio/detail/array_fwd.hpp
  /usr/local/include/boost/asio/detail/string_view.hpp
+ /usr/include/c++/11/experimental/string_view
+ /usr/include/c++/11/bits/ranges_base.h
+ /usr/include/c++/11/experimental/bits/lfts_config.h
+ /usr/include/c++/11/experimental/bits/string_view.tcc
  /usr/local/include/boost/detail/workaround.hpp
  /usr/local/include/boost/asio/detail/is_buffer_sequence.hpp
  /usr/local/include/boost/asio/detail/buffer_sequence_adapter.hpp
@@ -693,6 +682,11 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/local/include/boost/smart_ptr/detail/sp_thread_pause.hpp
  /usr/local/include/boost/smart_ptr/detail/sp_thread_sleep.hpp
  /usr/local/include/boost/config/pragma_message.hpp
+ /usr/include/c++/11/algorithm
+ /usr/include/c++/11/bits/stl_algo.h
+ /usr/include/c++/11/bits/algorithmfwd.h
+ /usr/include/c++/11/bits/stl_heap.h
+ /usr/include/c++/11/bits/uniform_int_dist.h
  /usr/local/include/boost/smart_ptr/detail/operator_bool.hpp
  /usr/local/include/boost/smart_ptr/detail/local_sp_deleter.hpp
  /usr/local/include/boost/smart_ptr/detail/local_counted_base.hpp
@@ -712,19 +706,6 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/include/x86_64-linux-gnu/bits/mathcalls.h
  /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h
  /usr/include/x86_64-linux-gnu/bits/iscanonical.h
- /usr/include/c++/11/bits/specfun.h
- /usr/include/c++/11/tr1/gamma.tcc
- /usr/include/c++/11/tr1/special_function_util.h
- /usr/include/c++/11/tr1/bessel_function.tcc
- /usr/include/c++/11/tr1/beta_function.tcc
- /usr/include/c++/11/tr1/ell_integral.tcc
- /usr/include/c++/11/tr1/exp_integral.tcc
- /usr/include/c++/11/tr1/hypergeometric.tcc
- /usr/include/c++/11/tr1/legendre_function.tcc
- /usr/include/c++/11/tr1/modified_bessel_func.tcc
- /usr/include/c++/11/tr1/poly_hermite.tcc
- /usr/include/c++/11/tr1/poly_laguerre.tcc
- /usr/include/c++/11/tr1/riemann_zeta.tcc
  /usr/local/include/boost/date_time/time_duration.hpp
  /usr/local/include/boost/core/enable_if.hpp
  /usr/local/include/boost/date_time/special_defs.hpp
@@ -1626,6 +1607,12 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/include/c++/11/bits/stl_deque.h
  /usr/include/c++/11/bits/deque.tcc
  /usr/local/include/boost/circular_buffer/space_optimized.hpp
+ /usr/include/c++/11/unordered_map
+ /usr/include/c++/11/bits/hashtable.h
+ /usr/include/c++/11/bits/hashtable_policy.h
+ /usr/include/c++/11/bits/enable_special_members.h
+ /usr/include/c++/11/bits/unordered_map.h
+ /usr/include/c++/11/bits/erase_if.h
  /usr/include/c++/11/queue
  /usr/include/c++/11/bits/stl_queue.h
  /usr/local/include/cryptoTools/Network/TLS.h
@@ -1636,78 +1623,12 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/include/c++/11/bits/unordered_set.h
  /usr/include/c++/11/thread
  /usr/include/c++/11/bits/this_thread_sleep.h
- /usr/local/include/libOTe/TwoChooseOne/Iknp/IknpOtExtReceiver.h
+ /usr/local/include/libOTe/TwoChooseOne/IknpOtExtReceiver.h
  /usr/local/include/libOTe/config.h
  /usr/local/include/libOTe/version.h
  /usr/local/include/libOTe/TwoChooseOne/OTExtInterface.h
- /usr/local/include/libOTe/Tools/Coproto.h
- /usr/local/include/coproto/coproto.h
- /usr/local/include/coproto/Socket/Socket.h
- /usr/local/include/coproto/Common/Defines.h
- /usr/local/include/coproto/config.h
- /usr/local/include/coproto/Common/span.h
- /usr/local/include/coproto/Common/error_code.h
- /usr/local/include/coproto/Common/TypeTraits.h
- /usr/local/include/coproto/Common/Function.h
- /usr/local/include/function2/function2.hpp
- /usr/local/include/coproto/Common/macoro.h
- /usr/local/include/macoro/task.h
- /usr/local/include/macoro/coroutine_handle.h
- /usr/local/include/macoro/config.h
- /usr/local/include/macoro/type_traits.h
- /usr/local/include/macoro/coro_frame.h
- /usr/local/include/macoro/optional.h
- /usr/local/include/nonstd/optional.hpp
- /usr/local/include/macoro/awaiter.h
- /usr/local/include/macoro/macros.h
- /usr/local/include/macoro/sync_wait.h
- /usr/local/include/macoro/when_all.h
- /usr/local/include/macoro/detail/when_all_awaitable.h
- /usr/local/include/macoro/detail/when_all_counter.h
- /usr/local/include/macoro/detail/when_all_task.h
- /usr/local/include/coproto/Proto/SessionID.h
- /usr/include/c++/11/random
- /usr/include/c++/11/bits/random.h
- /usr/include/x86_64-linux-gnu/c++/11/bits/opt_random.h
- /usr/include/c++/11/bits/random.tcc
- /usr/include/c++/11/numeric
- /usr/include/c++/11/bits/stl_numeric.h
- /usr/include/c++/11/pstl/glue_numeric_defs.h
- /usr/include/c++/11/iomanip
- /usr/include/c++/11/locale
- /usr/include/c++/11/bits/locale_facets_nonio.h
- /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h
- /usr/include/x86_64-linux-gnu/c++/11/bits/messages_members.h
- /usr/include/libintl.h
- /usr/include/c++/11/bits/codecvt.h
- /usr/include/c++/11/bits/locale_facets_nonio.tcc
- /usr/include/c++/11/bits/locale_conv.h
- /usr/include/c++/11/bits/quoted_string.h
- /usr/local/include/coproto/Socket/SocketScheduler.h
- /usr/local/include/coproto/Common/InlinePoly.h
- /usr/local/include/coproto/Common/Queue.h
- /usr/local/include/coproto/Common/Optional.h
- /usr/local/include/coproto/Proto/Operation.h
- /usr/local/include/macoro/stop.h
- /usr/local/include/macoro/detail/stop_callback.h
- /usr/local/include/macoro/detail/stop_token.h
- /usr/local/include/macoro/detail/stop_source.h
- /usr/local/include/macoro/detail/stop_awaiter.h
- /usr/local/include/macoro/detail/operation_cancelled.h
- /usr/local/include/coproto/Proto/Buffers.h
- /usr/local/include/macoro/take_until.h
- /usr/local/include/macoro/result.h
- /usr/local/include/macoro/variant.h
- /usr/local/include/nonstd/variant.hpp
- /usr/local/include/macoro/error_code.h
- /usr/local/include/macoro/timeout.h
- /usr/local/include/coproto/Socket/LocalAsyncSock.h
- /usr/local/include/macoro/wrap.h
- /usr/local/include/macoro/start_on.h
- /usr/local/include/macoro/transfer_to.h
- /usr/local/include/macoro/thread_pool.h
  /usr/local/include/cryptoTools/Common/Timer.h
- /usr/local/include/libOTe/TwoChooseOne/Iknp/IknpOtExtSender.h
+ /usr/local/include/libOTe/TwoChooseOne/IknpOtExtSender.h
  /usr/local/include/cryptoTools/Common/BitVector.h
  /usr/local/include/cryptoTools/Common/BitIterator.h
  /home/jhgao/code/gbf.h
@@ -1717,6 +1638,7 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/include/c++/11/bits/stl_multiset.h
  /home/jhgao/code/utl.h
  /home/jhgao/code/eccConvert.h
+ /home/jhgao/code/oprf_mpsu.h
  /home/jhgao/code/gc.h
  /usr/local/include/emp-sh2pc/emp-sh2pc.h
  /usr/local/include/emp-sh2pc/semihonest.h
@@ -1800,11 +1722,27 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/lib/gcc/x86_64-linux-gnu/11/include/amxbf16intrin.h
  /usr/lib/gcc/x86_64-linux-gnu/11/include/prfchwintrin.h
  /usr/lib/gcc/x86_64-linux-gnu/11/include/keylockerintrin.h
+ /usr/include/c++/11/iomanip
+ /usr/include/c++/11/locale
+ /usr/include/c++/11/bits/locale_facets_nonio.h
+ /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h
+ /usr/include/x86_64-linux-gnu/c++/11/bits/messages_members.h
+ /usr/include/libintl.h
+ /usr/include/c++/11/bits/codecvt.h
+ /usr/include/c++/11/bits/locale_facets_nonio.tcc
+ /usr/include/c++/11/bits/locale_conv.h
+ /usr/include/c++/11/bits/quoted_string.h
  /usr/local/include/emp-tool/utils/prg.h
  /usr/local/include/emp-tool/utils/aes.h
  /usr/local/include/emp-tool/utils/utils.h
  /usr/local/include/emp-tool/utils/constants.h
  /usr/local/include/emp-tool/utils/utils.hpp
+ /usr/include/c++/11/random
+ /usr/include/c++/11/bits/random.h
+ /usr/include/x86_64-linux-gnu/c++/11/bits/opt_random.h
+ /usr/include/c++/11/bits/random.tcc
+ /usr/include/c++/11/numeric
+ /usr/include/c++/11/bits/stl_numeric.h
  /usr/local/include/emp-tool/utils/group.h
  /usr/include/openssl/ec.h
  /usr/include/openssl/macros.h
@@ -1891,4 +1829,20 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o
  /usr/local/include/emp-ot/ferret/constants.h
  /usr/local/include/emp-ot/ferret/ferret_cot.hpp
  /usr/local/include/emp-sh2pc/sh_eva.h
+ /home/jhgao/code/ot_mpsu.h
+ /usr/local/include/libOTe/Base/BaseOT.h
+ /usr/local/include/libOTe/Base/SimplestOT.h
+ /usr/local/include/libOTe/Base/naor-pinkas.h
+ /usr/local/include/libOTe/Base/MasnyRindal.h
+ /usr/local/include/libOTe/Base/McRosRoyTwist.h
+ /usr/local/include/libOTe/Base/McRosRoy.h
+ /usr/local/include/libOTe/Tools/Popf/FeistelRistPopf.h
+ /usr/local/include/libOTe/Tools/DefaultCurve.h
+ /usr/local/include/libOTe/Tools/Popf/FeistelMulRistPopf.h
+ /usr/local/include/libOTe/Tools/Popf/EKEPopf.h
+ /usr/local/include/libOTe/Tools/Tools.h
+ /usr/local/include/cryptoTools/Common/MatrixView.h
+ /usr/local/include/libOTe/Tools/LinearCode.h
+ /usr/local/include/cryptoTools/Common/Matrix.h
+ /home/jhgao/code/libOTe/libOTe_Tests/OT_Tests.h
 

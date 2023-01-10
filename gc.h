@@ -9,8 +9,8 @@
 #include <cryptoTools/Crypto/PRNG.h>
 #include <cryptoTools/Crypto/AES.h>
 
-#include <libOTe/TwoChooseOne/Iknp/IknpOtExtReceiver.h>
-#include <libOTe/TwoChooseOne/Iknp/IknpOtExtSender.h>
+//#include <libOTe/TwoChooseOne/Iknp/IknpOtExtReceiver.h>
+//#include <libOTe/TwoChooseOne/Iknp/IknpOtExtSender.h>
 #include "gbf.h"
 #include "utl.h"
 #include "eccConvert.h"
@@ -62,8 +62,11 @@ void gc_test(){
             int party = pIdx;
             long long num = pIdx+1;
             emp::NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
+
             setup_semi_honest(io, party);
+
 	        auto z = _AeqB(io,party, num);
+            std::cout<<"point 3"<<std::endl;
 	        bool bS = z[0].reveal<bool>();
 	        bool bR = z[1].reveal<bool>();
 	        cout << "bs "<<bS <<endl;

@@ -93,15 +93,20 @@ mpsu_make_EXTERNAL_OBJECTS =
 mpsu_make: CMakeFiles/mpsu_make.dir/mpsu.cpp.o
 mpsu_make: CMakeFiles/mpsu_make.dir/build.make
 mpsu_make: /usr/local/lib/liblibOTe.a
+mpsu_make: /usr/local/lib/liblibOTe_Tests.a
+mpsu_make: /usr/local/lib/libemp-tool.so
+mpsu_make: /usr/lib/x86_64-linux-gnu/libssl.so
+mpsu_make: /usr/lib/x86_64-linux-gnu/libcrypto.so
+mpsu_make: /usr/local/lib/libemp-tool.so
+mpsu_make: /usr/lib/x86_64-linux-gnu/libssl.so
+mpsu_make: /usr/lib/x86_64-linux-gnu/libcrypto.so
+mpsu_make: /usr/local/lib/liblibOTe.a
 mpsu_make: /usr/local/lib/libbitpolymul.a
 mpsu_make: /usr/local/lib/libSimplestOT.a
 mpsu_make: /usr/local/lib/libcryptoTools.a
 mpsu_make: /usr/local/lib/librelic_s.a
-mpsu_make: /usr/local/lib/libsodium.a
-mpsu_make: /usr/local/lib/libcoproto.a
 mpsu_make: /usr/local/lib/libboost_system.a
 mpsu_make: /usr/local/lib/libboost_thread.a
-mpsu_make: /usr/local/lib/libmacoro.a
 mpsu_make: /usr/local/lib/libKyberOT.a
 mpsu_make: CMakeFiles/mpsu_make.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jhgao/code/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable mpsu_make"

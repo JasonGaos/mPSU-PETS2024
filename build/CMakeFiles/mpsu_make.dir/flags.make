@@ -6,5 +6,5 @@ CXX_DEFINES = -DBOOST_ALL_NO_LIB -DEMP_CIRCUIT_PATH=/usr/local/include/emp-tool/
 
 CXX_INCLUDES = -I/usr/local/include/include
 
-CXX_FLAGS = -maes -msse2 -msse3 -mssse3 -msse4.1 -mpclmul -mavx2
+CXX_FLAGS = -std=c++14 -pthread -maes -msse2 -msse3 -mssse3 -msse4.1 -mpclmul
 
