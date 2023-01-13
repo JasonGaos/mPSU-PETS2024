@@ -5,6 +5,7 @@
 #include "ot_mpsu.h"
 #include "oprf_mpsu.h"
 #include "libOTe/libOTe_Tests/OT_Tests.h"
+#include "hash_test.h"
 
 using namespace osuCrypto;
 
@@ -17,6 +18,7 @@ int main(void){
     //gc_test();
     //OtExt_Iknp_Test();
     //ot_test();
+    //hash_test();
     //tests_libOTe::DotExt_Iknp_Test();
 
     return 0;

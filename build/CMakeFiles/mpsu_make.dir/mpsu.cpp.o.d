@@ -1549,7 +1549,11 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o: /home/jhgao/code/mpsu.cpp \
  /usr/include/c++/11/bits/stl_tree.h /usr/include/c++/11/bits/stl_set.h \
  /usr/include/c++/11/bits/stl_multiset.h /home/jhgao/code/utl.h \
  /home/jhgao/code/eccConvert.h /home/jhgao/code/oprf_mpsu.h \
- /home/jhgao/code/gc.h /usr/local/include/emp-sh2pc/emp-sh2pc.h \
+ /home/jhgao/code/simpletable.h \
+ /usr/local/include/cryptoTools/Common/Matrix.h \
+ /usr/local/include/cryptoTools/Common/MatrixView.h \
+ /home/jhgao/code/cuckootable.h /home/jhgao/code/gc.h \
+ /usr/local/include/emp-sh2pc/emp-sh2pc.h \
  /usr/local/include/emp-sh2pc/semihonest.h \
  /usr/local/include/emp-sh2pc/sh_gen.h \
  /usr/local/include/emp-sh2pc/sh_party.h \
@@ -1729,7 +1733,6 @@ CMakeFiles/mpsu_make.dir/mpsu.cpp.o: /home/jhgao/code/mpsu.cpp \
  /usr/local/include/libOTe/Tools/Popf/FeistelMulRistPopf.h \
  /usr/local/include/libOTe/Tools/Popf/EKEPopf.h \
  /usr/local/include/libOTe/Tools/Tools.h \
- /usr/local/include/cryptoTools/Common/MatrixView.h \
  /usr/local/include/libOTe/Tools/LinearCode.h \
- /usr/local/include/cryptoTools/Common/Matrix.h \
- /home/jhgao/code/libOTe/libOTe_Tests/OT_Tests.h
+ /home/jhgao/code/libOTe/libOTe_Tests/OT_Tests.h \
+ /home/jhgao/code/hash_test.h

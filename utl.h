@@ -25,3 +25,12 @@ inline void print_u8vec(std::vector<u8> a) {
 	std::cout << std::endl;
 
 }
+
+inline u64 get_hash(block& element, u8& hashIdx, u64& num_bins)
+        {
+            u8* ptr = (u8*)&element;
+            ptr += 2 * hashIdx;
+
+            u64 h = *(u64*)ptr;
+            return h % num_bins;
+        }
