@@ -11,7 +11,7 @@ using namespace osuCrypto;
 
 int main(void){
 
-    mpsu_test();
+    //mpsu_test();
     //rpir_framework_test();
     //ecc_channel_test();
     //oprf_test();
@@ -19,7 +19,7 @@ int main(void){
     //OtExt_Iknp_Test();
     //ot_test();
     //hash_test();
-    //tests_libOTe::DotExt_Iknp_Test();
+    coprf_test();
 
     return 0;
 }
