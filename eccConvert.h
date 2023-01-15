@@ -409,7 +409,7 @@ inline void ecc_channel_test(){
 	REccPoint pk = g * sk;
 	std::vector<u8> pk_vec(g.sizeBytes());
 	pk.toBytes(pk_vec.data());
-	
+
 
 	for(u64 i = 0;i<10;i++){
 		// REccNumber r(curve);
