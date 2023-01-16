@@ -15,35 +15,36 @@
 
 using namespace osuCrypto;
 
-
-inline osuCrypto::block dh_oprf(u64 myIdx,osuCrypto::block x,std::vector<std::vector<Channel>>chls){
+inline std::vector<u8>  dh_oprf(u64 myIdx,std::vector<u8> x,std::vector<std::vector<Channel>>chls){
 	PRNG prng(_mm_set_epi32(11111, 34567 + myIdx, 234435, 23987054));
 	REllipticCurve curve;//(CURVE_25519)
 	//receiver
 	if (myIdx == 0){
+
 		REccPoint x_point;
-		std::vector<u8> x_vec = block_to_u8vec(x,32);
-		x_vec.insert(x_vec.begin(), 3);
-		x_point.fromBytes(x_vec.data());
-		
+
+		x.insert(x.begin(), 2);
+
+		x_point.fromBytes(x.data());
+
 		REccNumber a(curve);
 		a.randomize(prng);
 
 		x_point *= a;
 
-		x_point.toBytes(x_vec.data());
+		x_point.toBytes(x.data());
 
-		chls[0][1].send(x_vec.data(),x_vec.size());
-		chls[0][1].recv(x_vec.data(),x_vec.size());
+		chls[0][1].send(x.data(),x.size());
+		chls[0][1].recv(x.data(),x.size());
 
-		x_point.fromBytes(x_vec.data());
-		
+		x_point.fromBytes(x.data());
+
 		a = a.inverse();
-		
+
 		x_point *= a;
 
-		x_point.toBytes(x_vec.data());
-		return u8vec_to_block(x_vec,32);
+		x_point.toBytes(x.data());
+		return x;
 
 
 	}
@@ -57,8 +58,8 @@ inline osuCrypto::block dh_oprf(u64 myIdx,osuCrypto::block x,std::vector<std::ve
 		//random key
 		//block b_block = prng.get<block>();	
 		//chosen key
-		osuCrypto::block b_block = x;
-		std::vector<u8> b_vec = block_to_u8vec(b_block,32);	
+		
+		std::vector<u8> b_vec = x;
 		REccNumber b(curve);
 		b.fromBytes(b_vec.data());
 		
@@ -67,7 +68,7 @@ inline osuCrypto::block dh_oprf(u64 myIdx,osuCrypto::block x,std::vector<std::ve
 		x_point.toBytes(recv_x_vec.data());
 		chls[1][0].send(recv_x_vec.data(),recv_x_vec.size());
 		
-		return b_block;
+		return x;
 		
 	}
 }
@@ -145,23 +146,50 @@ inline void oprf_test(){
 		}
 	}
 
-	//set generation
-	//first half of same elements and second half of different elements.s
-	std::vector<std::vector<osuCrypto::block>> inputSet(nParties,std::vector<osuCrypto::block>(setSize));
-	
+	// set generation
+	// first half of same elements and second half of different elements.s
 
-	for (u64 i = 0; i < nParties; i++) {
+	// ECC Points
+	// nParties * setSize * 32 u8 vector
+	std::vector<std::vector<std::vector<u8>>> inputSet_u8(nParties);
+	// nParties * 2setSize  vector
+	std::vector<std::vector<block>> inputSet_block(nParties);
+
+	for (u64 i = 0; i < nParties; i++)
+	{
 		PRNG prngSame(_mm_set_epi32(4253465, 3434565, 234435, 23987054));
 		PRNG prngDiff(_mm_set_epi32(4253465, 3434565, 234423, i));
-		for (u64 j = 0; j < setSize; j++) {
-			if (j < setSize / 2) {
-				inputSet[i][j] = prngSame.get<osuCrypto::block>();
-				//std::cout <<"input of " << myIdx << " : " << hex << inputSet[j] << std::endl;
+		// std::cout<<"input from party "<<i<<std::endl;
+		REllipticCurve curve; //(CURVE_25519)
+		// generater g
+		const auto &g = curve.getGenerator();
+		for (u64 j = 0; j < setSize; j++)
+		{
+
+			REccNumber num(curve);
+
+			if (j < setSize / 2)
+			{
+				num.randomize(prngSame);
 			}
-			else {
-				inputSet[i][j] = prngDiff.get<osuCrypto::block>();
-				//std::cout << "input of " << myIdx << " : " << hex <<inputSet[j] << std::endl;
+			else
+			{
+				num.randomize(prngDiff);
 			}
+			REccPoint p = g * num;
+			std::vector<u8> p_vec(g.sizeBytes());
+			p.toBytes(p_vec.data());
+			p_vec.erase(p_vec.begin());
+			// print_u8vec(p_vec);
+			inputSet_u8[i].push_back(p_vec);
+			std::vector<block> p_block = u8vec_to_blocks(p_vec);
+			inputSet_block[i].push_back(p_block[0]);
+			inputSet_block[i].push_back(p_block[1]);
+
+			// it is safe to erase the first bit (give 2 later still generate a valid point)
+			//  p_vec.erase(p_vec.begin());
+			//  p_vec.insert(p_vec.begin(), 2);
+			//  p.fromBytes(p_vec.data());
 		}
 	}
 
@@ -178,7 +206,8 @@ inline void oprf_test(){
 			// block result = dh_oprf(pIdx,a,chls);
 			// std::cout<<"result "<<pIdx<<" "<<result<<std::endl;
 
-			std::vector<osuCrypto::block> result = aes_oprf(pIdx, inputSet[pIdx], setSize,chls,AES_keys[0]);
+			// std::vector<osuCrypto::block> result = aes_oprf(pIdx, inputSet[pIdx], setSize,chls,AES_keys[0]);
+			std::vector<u8> result = dh_oprf(pIdx, inputSet_u8[pIdx][0],chls);
 
 			
 

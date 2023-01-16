@@ -97,9 +97,6 @@ mpsu_make: /usr/local/lib/liblibOTe_Tests.a
 mpsu_make: /usr/local/lib/libemp-tool.so
 mpsu_make: /usr/lib/x86_64-linux-gnu/libssl.so
 mpsu_make: /usr/lib/x86_64-linux-gnu/libcrypto.so
-mpsu_make: /usr/local/lib/libemp-tool.so
-mpsu_make: /usr/lib/x86_64-linux-gnu/libssl.so
-mpsu_make: /usr/lib/x86_64-linux-gnu/libcrypto.so
 mpsu_make: /usr/local/lib/liblibOTe.a
 mpsu_make: /usr/local/lib/libbitpolymul.a
 mpsu_make: /usr/local/lib/libSimplestOT.a

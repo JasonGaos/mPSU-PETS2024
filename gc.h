@@ -52,34 +52,34 @@ vector<emp::Bit> _AeqB(emp::NetIO *io, int party_id, long long number){
 	return {z1,z2};
 }
 
-void gc_test(){
-    //thread 
-	std::vector<std::thread>  pThrds(2);
-	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
-	{
-		pThrds[pIdx] = std::thread([&, pIdx]() {
-			int port = 1000;
-            int party = pIdx;
-            long long num = pIdx+1;
-            emp::NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
+// void gc_test(){
+//     //thread 
+// 	std::vector<std::thread>  pThrds(2);
+// 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
+// 	{
+// 		pThrds[pIdx] = std::thread([&, pIdx]() {
+// 			int port = 1000;
+//             int party = pIdx;
+//             long long num = pIdx+1;
+//             emp::NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
-            setup_semi_honest(io, party);
+//             setup_semi_honest(io, party);
 
-	        auto z = _AeqB(io,party, num);
-            std::cout<<"point 3"<<std::endl;
-	        bool bS = z[0].reveal<bool>();
-	        bool bR = z[1].reveal<bool>();
-	        cout << "bs "<<bS <<endl;
-	        cout << "br "<<bR <<endl;
+// 	        auto z = _AeqB(io,party, num);
+//             std::cout<<"point 3"<<std::endl;
+// 	        bool bS = z[0].reveal<bool>();
+// 	        bool bR = z[1].reveal<bool>();
+// 	        cout << "bs "<<bS <<endl;
+// 	        cout << "br "<<bR <<endl;
 
-		});
-	}
+// 		});
+// 	}
 
-	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
-		pThrds[pIdx].join();
+// 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
+// 		pThrds[pIdx].join();
 
 
-}
+// }
 
 
 // int main(int argc, char** argv) {

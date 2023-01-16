@@ -118,6 +118,9 @@ CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 //Enable/Disable output of compile commands during generation.
 CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
 
+//Path to a file.
+CMAKE_FOLDER:PATH=/usr/local
+
 //Install path prefix, prepended onto install directories.
 CMAKE_INSTALL_PREFIX:PATH=/usr/local
 
@@ -227,6 +230,9 @@ CMAKE_STRIP:FILEPATH=/usr/bin/strip
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//Enable computing various crypto operations in circuit
+CRYPTO_IN_CIRCUIT:BOOL=OFF
+
 //Path to a file.
 EMP-OT_INCLUDE_DIR:PATH=/usr/local/include
 
@@ -277,6 +283,12 @@ SODIUM_LIBRARIES:FILEPATH=/usr/local/lib/libsodium.a
 
 //SODIUM_MONTGOMERY...
 SODIUM_MONTGOMERY:BOOL=ON
+
+//Enable multi-threaded backend
+THREADING:BOOL=ON
+
+//Enable RDSEED instruction
+USE_RANDOM_DEVICE:BOOL=OFF
 
 //The directory containing a CMake configuration file for bitpolymul.
 bitpolymul_DIR:PATH=/usr/local/lib/cmake/bitpolymul
@@ -502,6 +514,12 @@ OPENSSL_SSL_LIBRARY-ADVANCED:INTERNAL=1
 PKG_CONFIG_ARGN-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PKG_CONFIG_EXECUTABLE
 PKG_CONFIG_EXECUTABLE-ADVANCED:INTERNAL=1
+//Test RDSEED_RUN_RESULT
+RDSEED_RUN_RESULT:INTERNAL=1
+//Result of TRY_COMPILE
+RDSEED_RUN_RESULT_COMPILED:INTERNAL=TRUE
+//Result of TRY_RUN
+RDSEED_RUN_RESULT_EXITCODE:INTERNAL=0
 _OPENSSL_CFLAGS:INTERNAL=
 _OPENSSL_CFLAGS_I:INTERNAL=
 _OPENSSL_CFLAGS_OTHER:INTERNAL=

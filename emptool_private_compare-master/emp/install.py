@@ -7,9 +7,9 @@ if [ "$(uname)" == "Darwin" ]; then
  	brew list cmake || brew install cmake
 else
     if command -v apt-get >/dev/null; then
-        apt-get install -y software-properties-common
-        apt-get update
-        apt-get install -y cmake git build-essential libssl-dev
+        sudo apt-get install -y software-properties-common
+        sudo apt-get update
+        sudo apt-get install -y cmake git build-essential libssl-dev
     elif command -v yum >/dev/null; then
         yum install -y python3 gcc make git cmake gcc-c++ openssl-devel
     else
@@ -21,9 +21,9 @@ fi
 install_template = '''
 git clone https://github.com/emp-toolkit/X.git --branch Y
 cd X
-cmake .
-make -j4
-make install
+cmake -DTHREADING=ON .
+sudo make -j4
+sudo make install
 cd ..
 '''
 
