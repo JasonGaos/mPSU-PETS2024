@@ -264,7 +264,7 @@ inline std::vector<std::array<osuCrypto::block, 2>> rpir_batched_sender(std::vec
 		bool bS = z[0].reveal<bool>();
 		bool bR = z[1].reveal<bool>();
 
-		result = bS;
+		result = !bS;
 		//===========sim=============
 
 		b_s_vec[i] = result;
@@ -462,13 +462,14 @@ inline std::vector<osuCrypto::block> coprf_receiver_batched(std::vector<std::vec
 inline void psu2(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto::block> inputSet_block, u64 nParties, u64 myIdx, u64 setSize, std::vector<std::vector<Channel>> chls)
 {
 	u64 maxBinSize = 20;
-	// std::cout<<IoStream::lock;
-	// std::cout<<"P"<<myIdx<<" input"<<std::endl;
-	// // for(u64 i = 0; i<inputSet_u8.size(); i++){
-	// // 	print_u8vec(inputSet_u8[i]);
-	// // }
+	u64 tablesize = setSize * 1.27;
+	std::cout<<IoStream::lock;
+	std::cout<<"P"<<myIdx<<" input"<<std::endl;
+	for(u64 i = 0; i<inputSet_u8.size(); i++){
+		print_u8vec(inputSet_u8[i]);
+	}
 	// print_block(inputSet_block);
-	// std::cout<<IoStream::unlock;
+	std::cout<<IoStream::unlock;
 
 	// ============================================   local execution   ======================================
 
@@ -538,9 +539,12 @@ inline void psu2(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 	}
 	// p0 init V
 	std::vector<std::vector<std::vector<u8>>> set_V;
+
+	// set U
+	std::vector<std::vector<u8>> set_U;
 	if (myIdx == 0)
 	{
-		set_V = encrypt_set;
+		set_U = inputSet_u8;
 	}
 
 	////All the parties compute the Enc(pk,0)
@@ -641,13 +645,73 @@ inline void psu2(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 					//  update
 					simple.items[i][j] = oprf_value[0];
 				}
-
-				// 3c----------------- mOT --------------------------------------------------
 			}
+
 			// std::cout << IoStream::lock;
 			// std::cout<<"=================="<<std::endl;
 			// simple.print_table();
 			// std::cout << IoStream::unlock;
+
+			// 3c----------------- mOT --------------------------------------------------
+			std::vector<std::vector<Channel>> chlsrpir(2, std::vector<Channel>(2));
+			chlsrpir[0][1] = chls[0][round];
+
+			// rpir_batched
+
+			emp::NetIO *io = new NetIO("127.0.0.1", 6000);
+			setup_semi_honest(io, myIdx);
+
+			std::vector<osuCrypto::block> aes_keys = rpir_batched_receiver(chlsrpir, simple.items, io);
+
+			// 3.3 message parse & decrypt
+
+			std::vector<osuCrypto::block> rpir_message;
+
+			for (u64 i = 0; i < simple.items.size(); i++)
+			{
+				std::vector<osuCrypto::block> recv_aes_message(14);
+
+				chls[0][round].recv(recv_aes_message.data(), recv_aes_message.size());
+
+				// std::vector<osuCrypto::block> recv_aes_message = {recv_ot_messages.begin() + i * 14, recv_ot_messages.begin() + i * 14 + 14};
+
+				// decrypt
+				// message decode
+				AESDec decryptor(aes_keys[i]);
+				osuCrypto::block indicator = decryptor.ecbDecBlock(recv_aes_message[2]);
+				std::vector<osuCrypto::block> rpir_message;
+				if (indicator == toBlock(u64(0)) || indicator == toBlock(u64(1)) || indicator == toBlock(u64(2)) || indicator == toBlock(u64(3)))
+				{
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[0]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[1]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[2]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[3]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[4]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[5]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[6]));
+				}
+				else
+				{
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[7]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[8]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[9]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[10]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[11]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[12]));
+					rpir_message.push_back(decryptor.ecbDecBlock(recv_aes_message[13]));
+				}
+
+				// received message of length 7
+				// update X and V
+				//[0:1]prf value
+
+				simple.items[i].push_back(rpir_message[0]);
+				//[2:6]ciphertext of element
+				std::vector<osuCrypto::block> new_ctx_block = {rpir_message.begin() + 2, rpir_message.end()};
+				std::vector<std::vector<u8>> new_ctx = blocks_to_ciphertexts(new_ctx_block);
+				// update set_V
+				set_V.push_back(new_ctx);
+			}
 		}
 		else if (myIdx == round)
 		{
@@ -684,6 +748,90 @@ inline void psu2(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 			// std::cout << IoStream::unlock;
 
 			// 3c----------------- mOT --------------------------------------------------
+
+			std::vector<std::vector<Channel>> chlsrpir(2, std::vector<Channel>(2));
+			chlsrpir[1][0] = chls[round][0];
+			// 3.1 rpir
+			emp::NetIO *io = new NetIO(nullptr, 6000);
+			setup_semi_honest(io, myIdx);
+			std::vector<std::array<osuCrypto::block, 2>> aes_keys = rpir_batched_sender(chlsrpir, cuckoo.items, maxBinSize + round - 1, io);
+
+			// 3.3 message construction & encryption
+
+			PRNG prng_ot_aes(toBlock(12345678 + myIdx));
+
+			for (u64 i = 0; i < cuckoo.items.size(); i++)
+			{
+				std::vector<osuCrypto::block> ot_messages;
+				// for dummy value
+				if (cuckoo.item_idx[i] == -1)
+				{
+					// v0
+					// AES
+					AES aes_0(aes_keys[i][0]);
+					std::vector<osuCrypto::block> v0;
+					//$
+					v0.push_back(prng_ot_aes.get<osuCrypto::block>());
+					v0.push_back(prng_ot_aes.get<osuCrypto::block>());
+					// enc(0)
+					std::vector<osuCrypto::block> enc_zero0 = ciphertexts_to_blocks(encrypt_zero_set[i]);
+					v0.insert(v0.end(), enc_zero0.begin(), enc_zero0.end());
+					std::vector<osuCrypto::block> enc_v0(v0.size());
+					aes_0.ecbEncBlocks(v0.data(), v0.size(), enc_v0.data());
+					ot_messages.insert(ot_messages.end(), enc_v0.begin(), enc_v0.end());
+					// v1
+					// AES
+					AES aes_1(aes_keys[i][1]);
+					std::vector<osuCrypto::block> v1;
+					//$
+					v1.push_back(prng_ot_aes.get<osuCrypto::block>());
+					v1.push_back(prng_ot_aes.get<osuCrypto::block>());
+					// enc(0)
+					std::vector<osuCrypto::block> enc_zero1 = ciphertexts_to_blocks(encrypt_zero_set[i]);
+					v1.insert(v1.end(), enc_zero1.begin(), enc_zero1.end());
+					std::vector<osuCrypto::block> enc_v1(v1.size());
+					aes_1.ecbEncBlocks(v1.data(), v1.size(), enc_v1.data());
+					ot_messages.insert(ot_messages.end(), enc_v1.begin(), enc_v1.end());
+				}
+				// for real value
+				else
+				{
+					// v0
+					// AES
+					AES aes_0(aes_keys[i][0]);
+					std::vector<osuCrypto::block> v0;
+					//$
+					v0.push_back(prng_ot_aes.get<osuCrypto::block>());
+					v0.push_back(prng_ot_aes.get<osuCrypto::block>());
+					// enc(0)
+					std::vector<osuCrypto::block> enc_zero = ciphertexts_to_blocks(encrypt_zero_set[i]);
+					v0.insert(v0.end(), enc_zero.begin(), enc_zero.end());
+					std::vector<osuCrypto::block> enc_v0(v0.size());
+					aes_0.ecbEncBlocks(v0.data(), v0.size(), enc_v0.data());
+					ot_messages.insert(ot_messages.end(), enc_v0.begin(), enc_v0.end());
+
+					// v1
+					AES aes_1(aes_keys[i][1]);
+					std::vector<osuCrypto::block> v1;
+					// F(k,x)
+					v1.push_back(inputSet_block[2 * cuckoo.item_idx[i]]);
+					v1.push_back(inputSet_block[2 * cuckoo.item_idx[i] + 1]);
+					// Enc(x)
+					std::vector<osuCrypto::block> enc_x = ciphertexts_to_blocks(encrypt_set[cuckoo.item_idx[i]]);
+					v1.insert(v1.end(), enc_x.begin(), enc_x.end());
+					std::vector<osuCrypto::block> enc_v1(v1.size());
+					aes_1.ecbEncBlocks(v1.data(), v1.size(), enc_v1.data());
+					ot_messages.insert(ot_messages.end(), enc_v1.begin(), enc_v1.end());
+
+					// if(i == 0 && round == 1){
+					// 	print_block(rpir_input);
+					// 	std::cout<<"size of rpir input: "<<rpir_input.size()<<std::endl;
+					// }
+				}
+
+				chls[round][0].send(ot_messages.data(), ot_messages.size());
+			}
+
 			// 3b 3d ------------ coprf & encryption set update -------------------------
 		}
 		else
@@ -692,6 +840,64 @@ inline void psu2(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 		}
 
 		// ========================== Decrypt & Shuffle ==============================================
+		//shuffle not included for now
+		if (myIdx == 0)
+		{
+			std::vector<osuCrypto::block> set_V_block;
+
+			for (u64 i = 0; i < set_V.size(); i++)
+			{
+				// std::vector<std::vector<u8>> ctx = partial_decryption(set_V[i], s_keys[myIdx]);
+				std::vector<osuCrypto::block> ctx_block = ciphertexts_to_blocks(set_V[i]);
+				set_V_block.insert(set_V_block.end(), ctx_block.begin(), ctx_block.end());
+			}
+			chls[myIdx][1].send(set_V_block.data(), set_V_block.size());
+
+			// receive from p_n
+
+			// std::cout << IoStream::lock;
+			// print_u8vec(element);
+			// std::cout << IoStream::unlock;
+
+			std::vector<osuCrypto::block> recv_set_V_block(((nParties - 1) * tablesize) * 5);
+			chls[0][nParties - 1].recv(recv_set_V_block.data(), recv_set_V_block.size());
+			// print_block(recv_set_V_block);
+			std::vector<osuCrypto::block> dec_set_V_block;
+			std::vector<u8> zero(32);
+			for (u64 i = 0; i < (nParties - 1) * tablesize; i++)
+			{
+				std::vector<osuCrypto::block> ctx_block1 = {recv_set_V_block.begin() + 5 * i, recv_set_V_block.begin() + 5 * i + 5};
+				std::vector<std::vector<u8>> ctx_u8 = blocks_to_ciphertexts(ctx_block1);
+				std::vector<u8> element = decryption(ctx_u8, s_keys[myIdx]);
+				// print_u8vec(element);
+
+				if (element != zero)
+					set_U.push_back(element);
+			}
+			std::cout << IoStream::lock;
+			std::cout<<"final result: "<<std::endl;
+			for(u64 i = 0;i<set_U.size();i++){
+				print_u8vec(set_U[i]);
+			}
+			std::cout << IoStream::unlock;
+		}
+		else
+		{
+			std::vector<osuCrypto::block> recv_set_V_block(((nParties - 1) * tablesize) * 5);
+			chls[myIdx][myIdx - 1].recv(recv_set_V_block.data(), recv_set_V_block.size());
+			// print_block(recv_set_V_block);
+			std::vector<osuCrypto::block> dec_set_V_block;
+			for (u64 i = 0; i < (nParties - 1) * tablesize; i++)
+			{
+				std::vector<osuCrypto::block> ctx_block1 = {recv_set_V_block.begin() + 5 * i, recv_set_V_block.begin() + 5 * i + 5};
+				std::vector<std::vector<u8>> ctx_u8 = blocks_to_ciphertexts(ctx_block1);
+				std::vector<std::vector<u8>> ctx = partial_decryption(ctx_u8, s_keys[myIdx]);
+				std::vector<osuCrypto::block> ctx_block = ciphertexts_to_blocks(ctx);
+				dec_set_V_block.insert(dec_set_V_block.end(), ctx_block.begin(), ctx_block.end());
+			}
+
+			chls[myIdx][(myIdx + 1) % nParties].send(dec_set_V_block.data(), dec_set_V_block.size());
+		}
 	}
 }
 // // MPSU
@@ -1052,7 +1258,7 @@ inline void psu1_final(std::vector<std::vector<u8>> inputSet_u8, std::vector<osu
 	}
 
 	// 5.Decrypt & shuffle
-
+	//shuffle not included for now
 	if (myIdx == 0)
 	{
 		std::vector<osuCrypto::block> set_V_block;
@@ -1135,10 +1341,10 @@ inline void psu1_final(std::vector<std::vector<u8>> inputSet_u8, std::vector<osu
 inline void mpsu_test()
 {
 
-	u64 setSize = 1 << 2;
+	u64 setSize = 1 << 4;
 	u64 psiSecParam = 40;
 	u64 bitSize = 128;
-	u64 nParties = 2;
+	u64 nParties = 4;
 
 	// Create Channels
 	IOService ios(0);
@@ -1196,7 +1402,7 @@ inline void mpsu_test()
 
 			REccNumber num(curve);
 
-			if (j < setSize)
+			if (j < setSize/2)
 			{
 				num.randomize(prngSame);
 			}
@@ -1248,9 +1454,10 @@ inline void mpsu_test()
 	{
 		pThrds[pIdx] = std::thread([&, pIdx]()
 								   {
-									//    psu1_final(inputSet_u8[pIdx], inputSet_block[pIdx], nParties, pIdx, setSize, chls);
+									   psu1_final(inputSet_u8[pIdx], inputSet_block[pIdx], nParties, pIdx, setSize, chls);
 									// psu_framework_withHash_batched_gc(inputSet_u8[pIdx], inputSet_block[pIdx], nParties, pIdx, setSize, chls);
-									   psu2(inputSet_u8[pIdx], inputSet_block[pIdx], nParties, pIdx, setSize, chls); });
+									//    psu2(inputSet_u8[pIdx], inputSet_block[pIdx], nParties, pIdx, setSize, chls); 
+									});
 	}
 
 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)

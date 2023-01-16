@@ -77,6 +77,7 @@ inline std::vector<osuCrypto::block> dh_oprf(u64 myIdx, std::vector<osuCrypto::b
 		a.randomize(prng);
 
 		//x_point *= a;
+
 		std::vector<u8> x(33);
 		x_point.toBytes(x.data());
 
@@ -86,9 +87,13 @@ inline std::vector<osuCrypto::block> dh_oprf(u64 myIdx, std::vector<osuCrypto::b
 
 		x_point.fromBytes(x.data());
 
-		a = a.inverse();
-
-		//x_point *= a;
+		//inverse always outputs 1
+		// a = a.inverse();
+		// std::vector<u8> a_vec(32);
+		// a.toBytes(a_vec.data());
+		// print_u8vec(a_vec);
+		
+		//x_point *= a.inverse();
 
 		x_point.toBytes(x.data());
 		x.erase(x.begin());
