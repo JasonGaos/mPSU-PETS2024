@@ -77,7 +77,7 @@ inline void GbfEncode(const std::vector<std::pair<block, block>> key_values, std
 			}
 		}
 
-		if(firstFreeIdx!=-1)
+		if(firstFreeIdx!=u64(-1))
 			garbledBF[firstFreeIdx] = sum ^ key_values[i].second;
 		//std::cout << firstFreeIdx << " " << coefficients[firstFreeIdx] << std::endl;
 		//std::cout << test << "\n";

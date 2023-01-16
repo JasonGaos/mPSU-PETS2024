@@ -11,137 +11,199 @@
 #include "utl.h"
 #include "eccConvert.h"
 
-
-
 using namespace osuCrypto;
+inline std::vector<osuCrypto::block> dh_prf(std::vector<osuCrypto::block> x, std::vector<osuCrypto::block> key)
+{
+	REllipticCurve curve; //(CURVE_25519)
+	// generater g
+	const auto &g = curve.getGenerator();
+	// x is 1 block (element in cuckoo hash table)
+	AES pubHash(toBlock(12138));
+	std::vector<osuCrypto::block> H_q(x.size());
 
-inline std::vector<u8>  dh_oprf(u64 myIdx,std::vector<u8> x,std::vector<std::vector<Channel>>chls){
-	PRNG prng(_mm_set_epi32(11111, 34567 + myIdx, 234435, 23987054));
-	REllipticCurve curve;//(CURVE_25519)
-	//receiver
-	if (myIdx == 0){
+	pubHash.ecbEncBlocks(x.data(), x.size(), H_q.data());
 
-		REccPoint x_point;
+	std::vector<u8> hq_vec = block_to_u8vec(H_q[0], 32);
 
-		x.insert(x.begin(), 2);
+	REccNumber hq_num(curve);
+	hq_num.fromBytes(hq_vec.data());
 
-		x_point.fromBytes(x.data());
+	REccPoint x_point = g * hq_num;
+
+	std::vector<u8> key_vec = blocks_to_u8vec(key);
+	
+	REccNumber key_num(curve);
+	key_num.fromBytes(key_vec.data());
+
+	x_point *= key_num;
+
+	std::vector<u8> result_vec(33);
+	x_point.toBytes(result_vec.data());
+
+
+	result_vec.erase(result_vec.begin());
+
+	std::vector<osuCrypto::block> result = u8vec_to_blocks(result_vec);
+	return result;
+
+
+
+}
+inline std::vector<osuCrypto::block> dh_oprf(u64 myIdx, std::vector<osuCrypto::block> x, std::vector<std::vector<Channel>> chls)
+{
+	PRNG prng(_mm_set_epi32(4253465, 3434565, 234435, 1041));
+	REllipticCurve curve; //(CURVE_25519)
+
+	// generater g
+	const auto &g = curve.getGenerator();
+	// receiver
+	if (myIdx == 0)
+	{	
+
+		// x is 1 block (element in cuckoo hash table)
+		AES pubHash(toBlock(12138));
+		std::vector<osuCrypto::block> H_q(x.size());
+
+		pubHash.ecbEncBlocks(x.data(), x.size(), H_q.data());
+
+		std::vector<u8> hq_vec = block_to_u8vec(H_q[0], 32);
+
+		REccNumber hq_num(curve);
+		hq_num.fromBytes(hq_vec.data());
+
+		REccPoint x_point = g * hq_num;
 
 		REccNumber a(curve);
 		a.randomize(prng);
 
-		x_point *= a;
-
+		//x_point *= a;
+		std::vector<u8> x(33);
 		x_point.toBytes(x.data());
 
-		chls[0][1].send(x.data(),x.size());
-		chls[0][1].recv(x.data(),x.size());
+		chls[0][1].send(x.data(), x.size());
+
+		chls[0][1].recv(x.data(), x.size());
 
 		x_point.fromBytes(x.data());
 
 		a = a.inverse();
 
-		x_point *= a;
+		//x_point *= a;
 
 		x_point.toBytes(x.data());
-		return x;
+		x.erase(x.begin());
+		std::vector<osuCrypto::block> result = u8vec_to_blocks(x);
 
-
+		return result;
 	}
-	//sender
-	else if(myIdx == 1){
-		std::vector<u8> recv_x_vec (33);
-		chls[1][0].recv(recv_x_vec.data(),recv_x_vec.size());
-		
+	// sender
+
+	else if (myIdx == 1)
+	{
+		// input is key of 2 block
+		std::vector<u8> recv_x_vec(33);
+		chls[1][0].recv(recv_x_vec.data(), recv_x_vec.size());
+
 		REccPoint x_point;
 		x_point.fromBytes(recv_x_vec.data());
-		//random key
-		//block b_block = prng.get<block>();	
-		//chosen key
-		
-		std::vector<u8> b_vec = x;
+
+		//print_block(x);
+		std::vector<u8> b_vec = blocks_to_u8vec(x);
+
+
 		REccNumber b(curve);
+
 		b.fromBytes(b_vec.data());
-		
+
 		x_point *= b;
 
 		x_point.toBytes(recv_x_vec.data());
-		chls[1][0].send(recv_x_vec.data(),recv_x_vec.size());
-		
+
+
+		chls[1][0].send(recv_x_vec.data(), recv_x_vec.size());
+
+		// return the key
 		return x;
-		
 	}
 }
 
-inline std::vector<osuCrypto::block> aes_oprf(u64 myIdx,std::vector<osuCrypto::block> input,u64 setSize,std::vector<std::vector<Channel>>chls,osuCrypto::block AES_key){
-	//receiver
-	if(myIdx == 0){
+inline std::vector<osuCrypto::block> aes_oprf(u64 myIdx, std::vector<osuCrypto::block> input, u64 setSize, std::vector<std::vector<Channel>> chls, osuCrypto::block AES_key)
+{
+	// receiver
+	if (myIdx == 0)
+	{
 
-		std::vector<osuCrypto::block> recv_okvs_table(setSize*okvsLengthScale);
+		std::vector<osuCrypto::block> recv_okvs_table(setSize * okvsLengthScale);
 
-		chls[0][1].recv(recv_okvs_table.data(),recv_okvs_table.size());
+		chls[0][1].recv(recv_okvs_table.data(), recv_okvs_table.size());
 
 		std::vector<osuCrypto::block> oprf_value(input.size());
-		GbfDecode(recv_okvs_table,input,oprf_value);
-		//print_block(oprf_value);
+		GbfDecode(recv_okvs_table, input, oprf_value);
+		// print_block(oprf_value);
 		return oprf_value;
 	}
-	//sender
-	else if (myIdx == 1){
+	// sender
+	else if (myIdx == 1)
+	{
 
-		
 		AES aes_oprf(AES_key);
 
 		std::vector<osuCrypto::block> oprf_value(input.size());
 
-		aes_oprf.ecbEncBlocks(input.data(),input.size(),oprf_value.data());
-		//print_block(oprf_value);
+		aes_oprf.ecbEncBlocks(input.data(), input.size(), oprf_value.data());
+		// print_block(oprf_value);
 
-		std::vector<osuCrypto::block> okvs_table(input.size()*okvsLengthScale);
+		std::vector<osuCrypto::block> okvs_table(input.size() * okvsLengthScale);
 
-		GbfEncode(input,oprf_value,okvs_table);
+		GbfEncode(input, oprf_value, okvs_table);
 
-		chls[1][0].send(okvs_table.data(),okvs_table.size());
+		chls[1][0].send(okvs_table.data(), okvs_table.size());
 
 		return oprf_value;
-	}else{
-		return std::vector<osuCrypto::block> {toBlock(u64(0))};
 	}
-
+	else
+	{
+		return std::vector<osuCrypto::block>{toBlock(u64(0))};
+	}
 }
 
-inline void oprf_test(){
+inline void oprf_test()
+{
 	u64 setSize = 1 << 2;
 	u64 psiSecParam = 40;
 	u64 bitSize = 128;
 	u64 nParties = 2;
 
-	//Create Channels
+	// Create Channels
 	IOService ios(0);
 
 	auto ip = std::string("127.0.0.1");
 
 	std::string sessionHint = "psu";
 
-	std::vector<std::vector<Session>> ssns(nParties,std::vector<Session>(nParties));
+	std::vector<std::vector<Session>> ssns(nParties, std::vector<Session>(nParties));
 	std::vector<std::vector<Channel>> chls(nParties, std::vector<Channel>(nParties));
-	
-	for (u64 i = 0; i < nParties; i++) {
-		for (u64 j = 0; j < nParties; j++) {
-			if (i < j) {
+
+	for (u64 i = 0; i < nParties; i++)
+	{
+		for (u64 j = 0; j < nParties; j++)
+		{
+			if (i < j)
+			{
 				u32 port = 1100 + j * 100 + i;
 				std::string serversIpAddress = ip + ':' + std::to_string(port);
 				ssns[i][j].start(ios, serversIpAddress, SessionMode::Server, sessionHint);
 
 				chls[i][j] = ssns[i][j].addChannel();
-				//ep[i].start(ios, "localhost", port, true, name); //channel bwt i and pIdx, where i is receiver
+				// ep[i].start(ios, "localhost", port, true, name); //channel bwt i and pIdx, where i is receiver
 			}
-			else if (i > j) {
-				u32 port = 1100 + i * 100 + j ;
+			else if (i > j)
+			{
+				u32 port = 1100 + i * 100 + j;
 				std::string serversIpAddress = ip + ':' + std::to_string(port);
 				ssns[i][j].start(ios, serversIpAddress, SessionMode::Client, sessionHint);
 				chls[i][j] = ssns[i][j].addChannel();
-				//ep[i].start(ios, "localhost", port, false, name); //channel bwt i and pIdx, where i is sender
+				// ep[i].start(ios, "localhost", port, false, name); //channel bwt i and pIdx, where i is sender
 			}
 		}
 	}
@@ -153,7 +215,7 @@ inline void oprf_test(){
 	// nParties * setSize * 32 u8 vector
 	std::vector<std::vector<std::vector<u8>>> inputSet_u8(nParties);
 	// nParties * 2setSize  vector
-	std::vector<std::vector<block>> inputSet_block(nParties);
+	std::vector<std::vector<osuCrypto::block>> inputSet_block(nParties);
 
 	for (u64 i = 0; i < nParties; i++)
 	{
@@ -182,7 +244,7 @@ inline void oprf_test(){
 			p_vec.erase(p_vec.begin());
 			// print_u8vec(p_vec);
 			inputSet_u8[i].push_back(p_vec);
-			std::vector<block> p_block = u8vec_to_blocks(p_vec);
+			std::vector<osuCrypto::block> p_block = u8vec_to_blocks(p_vec);
 			inputSet_block[i].push_back(p_block[0]);
 			inputSet_block[i].push_back(p_block[1]);
 
@@ -193,44 +255,56 @@ inline void oprf_test(){
 		}
 	}
 
-    PRNG prngAES(_mm_set_epi32(123, 3434565, 234435, 23987054));
-    std::vector<osuCrypto::block> AES_keys;
-    AES_keys.push_back(prngAES.get<osuCrypto::block>());
+	PRNG prngAES(_mm_set_epi32(123, 3434565, 234435, 23987054));
+	std::vector<osuCrypto::block> AES_keys;
+	AES_keys.push_back(prngAES.get<osuCrypto::block>());
 
-	//thread 
-	std::vector<std::thread>  pThrds(nParties);
+	// thread
+	std::vector<std::thread> pThrds(nParties);
 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
 	{
-		pThrds[pIdx] = std::thread([&, pIdx]() {
-			// block a = toBlock(123);
-			// block result = dh_oprf(pIdx,a,chls);
-			// std::cout<<"result "<<pIdx<<" "<<result<<std::endl;
+		pThrds[pIdx] = std::thread([&, pIdx]()
+								   {
+									   // block a = toBlock(123);
+									   // block result = dh_oprf(pIdx,a,chls);
+									   // std::cout<<"result "<<pIdx<<" "<<result<<std::endl;
 
-			// std::vector<osuCrypto::block> result = aes_oprf(pIdx, inputSet[pIdx], setSize,chls,AES_keys[0]);
-			std::vector<u8> result = dh_oprf(pIdx, inputSet_u8[pIdx][0],chls);
+									   // std::vector<osuCrypto::block> result = aes_oprf(pIdx, inputSet[pIdx], setSize,chls,AES_keys[0]);
+									   if(pIdx == 0){
+										std::vector<osuCrypto::block> input = {toBlock(u64(123))};
+										std::vector<osuCrypto::block> result = dh_oprf(pIdx, input, chls);
+										print_block(result);
 
-			
-
-		});
+									   }
+									   else if (pIdx == 1){
+										std::vector<osuCrypto::block> result = dh_oprf(pIdx, inputSet_block[pIdx], chls);
+										std::vector<osuCrypto::block> input = {toBlock(u64(123))};
+										std::vector<osuCrypto::block> result2 = dh_prf(input,inputSet_block[pIdx]);
+										print_block(result2);
+									   } });
 	}
 
 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
 		pThrds[pIdx].join();
 
-
-
-	//Close channels
-	for (u64 i = 0; i < nParties; i++) {
-		for (u64 j = 0; j < nParties; j++) {
-			if (i != j) {
+	// Close channels
+	for (u64 i = 0; i < nParties; i++)
+	{
+		for (u64 j = 0; j < nParties; j++)
+		{
+			if (i != j)
+			{
 				chls[i][j].close();
 			}
 		}
 	}
 
-	for (u64 i = 0; i < nParties; i++) {
-		for (u64 j = 0; j < nParties; j++) {
-			if (i != j) {
+	for (u64 i = 0; i < nParties; i++)
+	{
+		for (u64 j = 0; j < nParties; j++)
+		{
+			if (i != j)
+			{
 				ssns[i][j].stop();
 			}
 		}
@@ -238,4 +312,3 @@ inline void oprf_test(){
 
 	ios.stop();
 }
-

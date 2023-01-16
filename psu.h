@@ -57,7 +57,7 @@ inline std::vector<osuCrypto::block> rpir_batched_receiver_gcsim(std::vector<std
 
 		// 2.gc
 		u8 result = 1;
-		
+
 		// 3.1 circuit_psi
 		choices[i] = result;
 	}
@@ -156,7 +156,7 @@ inline std::vector<std::array<osuCrypto::block, 2>> rpir_batched_sender_gcsim(st
 }
 
 // return aes key
-inline std::vector<osuCrypto::block> rpir_batched_receiver(std::vector<std::vector<Channel>> chls, std::vector<std::vector<osuCrypto::block>> inputSet,emp::NetIO *io)
+inline std::vector<osuCrypto::block> rpir_batched_receiver(std::vector<std::vector<Channel>> chls, std::vector<std::vector<osuCrypto::block>> inputSet, emp::NetIO *io)
 {
 	AES hashOKVS(toBlock(12138));
 	PRNG secret_value_generater(_mm_set_epi32(4253465, 12365, 234435, 23987054));
@@ -192,11 +192,11 @@ inline std::vector<osuCrypto::block> rpir_batched_receiver(std::vector<std::vect
 		// 2.gc
 		u8 result = 0;
 		u64 number_to_compare;
-		memcpy(&number_to_compare,&secret_value,sizeof(number_to_compare));
+		memcpy(&number_to_compare, &secret_value, sizeof(number_to_compare));
 		// std::cout << "num:"<<number_to_compare<<std::endl;
-		auto z = _AeqB(io,1,number_to_compare);
+		auto z = _AeqB(io, 1, number_to_compare);
 		bool bS = z[0].reveal<bool>();
-	    bool bR = z[1].reveal<bool>();
+		bool bR = z[1].reveal<bool>();
 		// delete io;
 		result = bR;
 
@@ -226,7 +226,7 @@ inline std::vector<osuCrypto::block> rpir_batched_receiver(std::vector<std::vect
 	return aes_keys;
 }
 
-inline std::vector<std::array<osuCrypto::block, 2>> rpir_batched_sender(std::vector<std::vector<Channel>> chls, std::vector<osuCrypto::block> inputSet, u64 maxBinSize,emp::NetIO *io)
+inline std::vector<std::array<osuCrypto::block, 2>> rpir_batched_sender(std::vector<std::vector<Channel>> chls, std::vector<osuCrypto::block> inputSet, u64 maxBinSize, emp::NetIO *io)
 {
 	// sender
 	AES hashOKVS(toBlock(12138));
@@ -259,11 +259,11 @@ inline std::vector<std::array<osuCrypto::block, 2>> rpir_batched_sender(std::vec
 		u8 result = 0;
 		u64 number_to_compare;
 		memcpy(&number_to_compare, &received_value, sizeof(number_to_compare));
-		
-		auto z = _AeqB(io,2, number_to_compare);
+
+		auto z = _AeqB(io, 2, number_to_compare);
 		bool bS = z[0].reveal<bool>();
 		bool bR = z[1].reveal<bool>();
-		
+
 		result = bS;
 		//===========sim=============
 
@@ -338,8 +338,6 @@ inline void coprf_sender_batched(std::vector<std::vector<Channel>> chls, std::ve
 			point_block.push_back(decryptor.ecbDecBlock(recv_aes_message[5]));
 		}
 
-		// print_block(point_block);
-
 		// construct point u8vec
 		std::vector<u8> y(1);
 		if (point_block[0] == toBlock(u64(2)))
@@ -352,7 +350,6 @@ inline void coprf_sender_batched(std::vector<std::vector<Channel>> chls, std::ve
 		}
 		std::vector<u8> v_vec = blocks_to_u8vec({point_block[1], point_block[2]});
 		v_vec.insert(v_vec.begin(), y.begin(), y.end());
-		// print_u8vec(v_vec);
 
 		REccPoint v(curve);
 		REccNumber key(curve);
@@ -363,7 +360,6 @@ inline void coprf_sender_batched(std::vector<std::vector<Channel>> chls, std::ve
 		v.toBytes(w_vec.data());
 		// print_u8vec(w_vec);
 		chls[0][1].send(w_vec.data(), w_vec.size());
-				std::cout <<"element: "<<i<< " 2" << std::endl;
 	}
 
 	return;
@@ -380,7 +376,10 @@ inline std::vector<osuCrypto::block> coprf_receiver_batched(std::vector<std::vec
 	// generater g
 	const auto &g = curve.getGenerator();
 	// hash aes
-	AES pubHash(toBlock(12138));
+
+	input[0] = toBlock(u64(123));
+
+	osuCrypto::AES pubHash(toBlock(12138));
 	std::vector<osuCrypto::block> H_q(input.size());
 	pubHash.ecbEncBlocks(input.data(), input.size(), H_q.data());
 
@@ -418,6 +417,7 @@ inline std::vector<osuCrypto::block> coprf_receiver_batched(std::vector<std::vec
 		REccNumber hq(curve);
 		// std::vector<u8> hq_vec = blocks_to_u8vec({H_q[i * 2], H_q[i * 2 + 1]});
 		std::vector<u8> hq_vec = block_to_u8vec(H_q[i], 32);
+
 		hq.fromBytes(hq_vec.data());
 		// H(q)
 		v1 = g * hq;
@@ -428,6 +428,7 @@ inline std::vector<osuCrypto::block> coprf_receiver_batched(std::vector<std::vec
 
 		std::vector<u8> v1_vec(33);
 		v1.toBytes(v1_vec.data());
+
 		std::vector<osuCrypto::block> y1 = {toBlock(v1_vec[0])};
 		v1_vec.erase(v1_vec.begin());
 		std::vector<osuCrypto::block> v1_block = u8vec_to_blocks(v1_vec);
@@ -458,7 +459,7 @@ inline std::vector<osuCrypto::block> coprf_receiver_batched(std::vector<std::vec
 	return coprf_value;
 }
 
-inline void psu2_coprf_test(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto::block> inputSet_block, u64 nParties, u64 myIdx, u64 setSize, std::vector<std::vector<Channel>> chls)
+inline void psu2(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto::block> inputSet_block, u64 nParties, u64 myIdx, u64 setSize, std::vector<std::vector<Channel>> chls)
 {
 	u64 maxBinSize = 20;
 	// std::cout<<IoStream::lock;
@@ -554,14 +555,15 @@ inline void psu2_coprf_test(std::vector<std::vector<u8>> inputSet_u8, std::vecto
 		encrypt_zero_set.push_back(ciphertext);
 	}
 
+	SimpleTable simple;
+	CuckooTable cuckoo;
 	if (myIdx == 0)
 	{
-		std::vector<std::vector<Channel>> chlscoprf(2, std::vector<Channel>(2));
-		chlscoprf[0][1] = chls[0][1];
+
 		//----------------simple hashing--------------------
 
 		PRNG simple_dummy(_mm_set_epi32(4253465, 3434565, 234435, 1234567 + myIdx));
-		SimpleTable simple;
+
 		simple.init(1.27, setSize, 3);
 
 		for (u64 i = 0; i < setSize; i++)
@@ -569,26 +571,22 @@ inline void psu2_coprf_test(std::vector<std::vector<u8>> inputSet_u8, std::vecto
 			simple.insertItems(inputSet_block[2 * i]);
 		}
 
-		// std::cout << "max bin size: " << simple.getMaxBinSize() << std::endl;
-		//  std::cout<<IoStream::lock;
-		//  simple.print_table();
-		//  std::cout<<IoStream::unlock;
 		simple.padGlobalItems(simple_dummy, maxBinSize);
 
+		// std::cout<<IoStream::lock;
+		// std::cout<<"after padding"<<std::endl;
+		// simple.print_table();
+		// std::cout<<IoStream::unlock;
+
 		//--------------------------------------------------
-		std::vector<u8> key = block_to_u8vec(toBlock(1234), 32);
-
-		coprf_sender_batched(chlscoprf, simple.items, key);
-
 	}
 	else if (myIdx == 1)
 	{
-		std::vector<std::vector<Channel>> chlscoprf(2, std::vector<Channel>(2));
-		chlscoprf[1][0] = chls[1][0];
+
 		//----------------simple hashing--------------------
 
 		PRNG simple_dummy(_mm_set_epi32(4253465, 3434565, 234435, 1234567 + myIdx));
-		SimpleTable simple;
+
 		simple.init(1.27, setSize, 3);
 
 		for (u64 i = 0; i < setSize; i++)
@@ -596,50 +594,106 @@ inline void psu2_coprf_test(std::vector<std::vector<u8>> inputSet_u8, std::vecto
 			simple.insertItems(inputSet_block[2 * i]);
 		}
 
-		// std::cout << "max bin size: " << simple.getMaxBinSize() << std::endl;
-		//  std::cout<<IoStream::lock;
-		//  simple.print_table();
-		//  std::cout<<IoStream::unlock;
 		simple.padGlobalItems(simple_dummy, maxBinSize);
 
 		//--------------------------------------------------
 		//----------------cuckoo hashing--------------------
-		u64 table_size = 1.27 * setSize;
-		PRNG cuckoo_dummy(_mm_set_epi32(4253465, 3434565, 23232435, 1234567 + myIdx));
-		CuckooTable cuckoo;
+
+		PRNG cuckoo_dummy(_mm_set_epi32(4253465, 3431235, 23232435, 1234567 + myIdx));
+
 		cuckoo.init(1.27, setSize, 3);
+
 		for (u64 i = 0; i < setSize; i++)
 		{
 			cuckoo.insertItem(inputSet_block[i * 2], i);
 		}
 
+		cuckoo.padGlobalItems(cuckoo_dummy);
+
 		// std::cout<<IoStream::lock;
+		// std::cout<<"after padding"<<std::endl;
 		// cuckoo.print_table();
 		// std::cout<<IoStream::unlock;
 
-		cuckoo.padGlobalItems(cuckoo_dummy);
-
 		//--------------------------------------------------
-
-		std::vector<osuCrypto::block> coprf_output = coprf_receiver_batched(chlscoprf, cuckoo.items);
-
 	}
-
+	std::cout << "Party " << myIdx << " offline finished" << std::endl;
 	// =========================== online execution ==============================================
 	for (u64 round = 1; round < nParties; round++)
 	{
 		if (myIdx == 0)
 		{
+			// 3a---------------- oprf --------------------------------------------------
+			// chls
+			std::vector<std::vector<Channel>> chlsoprf(2, std::vector<Channel>(2));
+			chlsoprf[0][1] = chls[0][round];
+
+			// oprf receiver
+
+			for (u64 i = 0; i < simple.items.size(); i++)
+			{
+				for (u64 j = 0; j < simple.items[i].size(); j++)
+				{
+
+					std::vector<osuCrypto::block> oprf_input = {simple.items[i][j]};
+					std::vector<osuCrypto::block> oprf_value = dh_oprf(0, oprf_input, chlsoprf);
+					// std::cout<<oprf_value[0]<<std::endl;
+					//  update
+					simple.items[i][j] = oprf_value[0];
+				}
+
+				// 3c----------------- mOT --------------------------------------------------
+			}
+			// std::cout << IoStream::lock;
+			// std::cout<<"=================="<<std::endl;
+			// simple.print_table();
+			// std::cout << IoStream::unlock;
 		}
 		else if (myIdx == round)
 		{
+			// 3a---------------- oprf --------------------------------------------------
+			// chls
+			std::vector<std::vector<Channel>> chlsoprf(2, std::vector<Channel>(2));
+			chlsoprf[1][0] = chls[round][0];
+
+			PRNG key_gen(toBlock(u64(135246 + myIdx)));
+			std::vector<osuCrypto::block> key;
+			key.push_back(key_gen.get<osuCrypto::block>());
+			key.push_back(key_gen.get<osuCrypto::block>());
+			// oprf sender
+
+			for (u64 i = 0; i < simple.items.size(); i++)
+			{
+				for (u64 j = 0; j < simple.items[i].size(); j++)
+				{
+					// oprf with p0
+					std::vector<osuCrypto::block> a = dh_oprf(1, key, chlsoprf);
+					// update own table
+					// simple
+					std::vector<osuCrypto::block> oprf_value = dh_prf({simple.items[i][j]}, key);
+					simple.items[i][j] = oprf_value[0];
+				}
+				// cuckoo
+				std::vector<osuCrypto::block> oprf_value = dh_prf({cuckoo.items[i]}, key);
+				// std::cout<<oprf_value[0]<<std::endl;
+				cuckoo.items[i] = oprf_value[0];
+			}
+			// std::cout << IoStream::lock;
+			// std::cout<<"=================="<<std::endl;
+			// cuckoo.print_table();
+			// std::cout << IoStream::unlock;
+
+			// 3c----------------- mOT --------------------------------------------------
+			// 3b 3d ------------ coprf & encryption set update -------------------------
 		}
 		else
 		{
+			// 3b 3d ------------ coprf & encryption set update -------------------------
 		}
+
+		// ========================== Decrypt & Shuffle ==============================================
 	}
 }
-
 // // MPSU
 inline void psu1_final(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto::block> inputSet_block, u64 nParties, u64 myIdx, u64 setSize, std::vector<std::vector<Channel>> chls)
 {
@@ -853,8 +907,8 @@ inline void psu1_final(std::vector<std::vector<u8>> inputSet_u8, std::vector<osu
 
 			// rpir_batched
 
-			emp::NetIO * io = new NetIO("127.0.0.1",6000);
-			setup_semi_honest(io,myIdx);
+			emp::NetIO *io = new NetIO("127.0.0.1", 6000);
+			setup_semi_honest(io, myIdx);
 
 			std::vector<osuCrypto::block> aes_keys = rpir_batched_receiver(chlsrpir, simple.items, io);
 
@@ -913,9 +967,9 @@ inline void psu1_final(std::vector<std::vector<u8>> inputSet_u8, std::vector<osu
 			std::vector<std::vector<Channel>> chlsrpir(2, std::vector<Channel>(2));
 			chlsrpir[1][0] = chls[round][0];
 			// 3.1 rpir
-			emp::NetIO * io = new NetIO(nullptr,6000);
-			setup_semi_honest(io,myIdx);
-			std::vector<std::array<osuCrypto::block, 2>> aes_keys = rpir_batched_sender(chlsrpir, cuckoo.items, maxBinSize + round - 1,io);
+			emp::NetIO *io = new NetIO(nullptr, 6000);
+			setup_semi_honest(io, myIdx);
+			std::vector<std::array<osuCrypto::block, 2>> aes_keys = rpir_batched_sender(chlsrpir, cuckoo.items, maxBinSize + round - 1, io);
 
 			// 3.3 message construction & encryption
 
@@ -1081,7 +1135,7 @@ inline void psu1_final(std::vector<std::vector<u8>> inputSet_u8, std::vector<osu
 inline void mpsu_test()
 {
 
-	u64 setSize = 1 << 4;
+	u64 setSize = 1 << 2;
 	u64 psiSecParam = 40;
 	u64 bitSize = 128;
 	u64 nParties = 2;
@@ -1142,7 +1196,7 @@ inline void mpsu_test()
 
 			REccNumber num(curve);
 
-			if (j < setSize / 2)
+			if (j < setSize)
 			{
 				num.randomize(prngSame);
 			}
@@ -1194,10 +1248,9 @@ inline void mpsu_test()
 	{
 		pThrds[pIdx] = std::thread([&, pIdx]()
 								   {
-									   psu1_final(inputSet_u8[pIdx], inputSet_block[pIdx], nParties, pIdx, setSize, chls);
+									//    psu1_final(inputSet_u8[pIdx], inputSet_block[pIdx], nParties, pIdx, setSize, chls);
 									// psu_framework_withHash_batched_gc(inputSet_u8[pIdx], inputSet_block[pIdx], nParties, pIdx, setSize, chls);
-									//    psu2_coprf_test(inputSet_u8[pIdx], inputSet_block[pIdx], nParties, pIdx, setSize, chls); 
-									});
+									   psu2(inputSet_u8[pIdx], inputSet_block[pIdx], nParties, pIdx, setSize, chls); });
 	}
 
 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)

@@ -18,7 +18,7 @@
 using namespace osuCrypto;
 
 
-inline std::vector<u8> block_to_u8vec(block a, int size_curve_points) {
+inline std::vector<u8> block_to_u8vec(osuCrypto::block a, int size_curve_points) {
 
 	u8 var8[16];
 	memcpy(var8, &a, sizeof(var8));
@@ -33,7 +33,7 @@ inline std::vector<u8> block_to_u8vec(block a, int size_curve_points) {
 	return dest;
 }
 
-inline block u8vec_to_block(std::vector<u8> dest,int size_curve_points) {
+inline osuCrypto::block u8vec_to_block(std::vector<u8> dest,int size_curve_points) {
 	u8 var8[16];
 
 	for (u64 i = 0; i < 16; i++) {
@@ -47,7 +47,7 @@ inline block u8vec_to_block(std::vector<u8> dest,int size_curve_points) {
 	return a;
 }
 
-inline std::vector<block> u8vec_to_blocks(std::vector<u8> dest) {
+inline std::vector<osuCrypto::block> u8vec_to_blocks(std::vector<u8> dest) {
 	u8 var8_1[16];
 	u8 var8_2[16];
 	std::vector<block> result;
@@ -66,7 +66,7 @@ inline std::vector<block> u8vec_to_blocks(std::vector<u8> dest) {
 	return result;
 }
 
-inline std::vector<u8> blocks_to_u8vec(std::vector<block> a){
+inline std::vector<u8> blocks_to_u8vec(std::vector<osuCrypto::block> a){
 	u8 var8_1[16];
 	memcpy(var8_1, &a[0], sizeof(var8_1));
 	u8 var8_2[16];
@@ -81,7 +81,7 @@ inline std::vector<u8> blocks_to_u8vec(std::vector<block> a){
 	return dest;
 }
 
-inline std::vector<block> num_vec_to_blocks(std::vector<u8> vec) {
+inline std::vector<osuCrypto::block> num_vec_to_blocks(std::vector<u8> vec) {
 
 	std::vector<block> a;
 
@@ -104,7 +104,7 @@ inline std::vector<block> num_vec_to_blocks(std::vector<u8> vec) {
 	return a;
 }
 
-inline std::vector<block> point_vec_to_blocks(std::vector<u8> vec) {
+inline std::vector<osuCrypto::block> point_vec_to_blocks(std::vector<u8> vec) {
 
 	std::vector<block> a;
 
@@ -125,12 +125,12 @@ inline std::vector<block> point_vec_to_blocks(std::vector<u8> vec) {
 	return a;
 }
 
-inline std::vector<u8> blocks_to_num_vec(std::vector<block> blocks) {
+inline std::vector<u8> blocks_to_num_vec(std::vector<osuCrypto::block> blocks) {
 
 	std::vector<u8> vec(32);
 	u8 var8_1[16];
 	u8 var8_2[16];
-	block ctx_1;
+
 	memcpy(&var8_1, &blocks[0], sizeof(var8_1));
 	memcpy(&var8_2, &blocks[1], sizeof(var8_2));
 
@@ -142,7 +142,7 @@ inline std::vector<u8> blocks_to_num_vec(std::vector<block> blocks) {
 	return vec;
 }
 
-inline std::vector<u8> blocks_to_point_vec(std::vector<block> blocks) {
+inline std::vector<u8> blocks_to_point_vec(std::vector<osuCrypto::block> blocks) {
 	u8 first_bit;
 	if (blocks[0] == toBlock(u64(0))) {
 		first_bit = 0;
@@ -160,10 +160,10 @@ inline std::vector<u8> blocks_to_point_vec(std::vector<block> blocks) {
 	return vec;
 }
 
-inline std::vector<block> ciphertexts_to_blocks(std::vector<std::vector<u8>>& ctx) {
+inline std::vector<osuCrypto::block> ciphertexts_to_blocks(std::vector<std::vector<u8>>& ctx) {
 	std::vector<u8> ctx1 = ctx[0];
 	std::vector<u8> ctx2 = ctx[1];
-	int num_block = 4;// 2*33*8/128
+
 	std::vector<block> a;
 	
 	block b;
@@ -209,7 +209,7 @@ inline std::vector<block> ciphertexts_to_blocks(std::vector<std::vector<u8>>& ct
 
 }
 
-inline std::vector<std::vector<u8>> blocks_to_ciphertexts(std::vector<block> blocks) {
+inline std::vector<std::vector<u8>> blocks_to_ciphertexts(std::vector<osuCrypto::block> blocks) {
 
 	std::vector<std::vector<u8>> a;
 	std::vector<u8> ctx1(32);
