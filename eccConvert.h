@@ -209,6 +209,29 @@ inline std::vector<osuCrypto::block> ciphertexts_to_blocks(std::vector<std::vect
 
 }
 
+inline std::vector<std::vector<u8>> rerandomize(std::vector<std::vector<u8>>ctx){
+
+	REllipticCurve curve;//(CURVE_25519)
+	PRNG prng(_mm_set_epi32(19249,4923, 233121465, 123));
+	const auto& g = curve.getGenerator();
+	REccNumber r(curve);
+	REccPoint gr(curve);
+	gr = g * r;
+	REccPoint ctx1(curve);
+	REccPoint ctx2(curve);
+	ctx1.fromBytes(ctx[0].data());
+	ctx1.fromBytes(ctx[1].data());
+
+	ctx1 += gr;
+	ctx2 += gr;
+
+	ctx1.toBytes(ctx[0].data());
+	ctx1.toBytes(ctx[1].data());
+
+	return ctx;
+
+}
+
 inline std::vector<std::vector<u8>> blocks_to_ciphertexts(std::vector<osuCrypto::block> blocks) {
 
 	std::vector<std::vector<u8>> a;

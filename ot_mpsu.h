@@ -160,8 +160,8 @@ void psu_ot(std::vector<osuCrypto::block> inputSet, u64 nParties, u64 myIdx, u64
 
 void ot_test() {
 	u64 setSize = 1 << 1;
-	u64 psiSecParam = 40;
-	u64 bitSize = 128;
+	// u64 psiSecParam = 40;
+	// u64 bitSize = 128;
 	u64 nParties = 2;
 	
 	//Create Channels

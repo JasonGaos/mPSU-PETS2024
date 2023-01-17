@@ -14,7 +14,7 @@ int main(void){
     mpsu_test();
     //rpir_framework_test();
     //ecc_channel_test();
-    // oprf_test();
+    //oprf_test();
     //gc_test();
     //OtExt_Iknp_Test();
     // ot_test();

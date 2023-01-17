@@ -31,7 +31,7 @@ inline std::vector<osuCrypto::block> dh_prf(std::vector<osuCrypto::block> x, std
 	REccPoint x_point = g * hq_num;
 
 	std::vector<u8> key_vec = blocks_to_u8vec(key);
-	
+
 	REccNumber key_num(curve);
 	key_num.fromBytes(key_vec.data());
 
@@ -40,14 +40,10 @@ inline std::vector<osuCrypto::block> dh_prf(std::vector<osuCrypto::block> x, std
 	std::vector<u8> result_vec(33);
 	x_point.toBytes(result_vec.data());
 
-
 	result_vec.erase(result_vec.begin());
 
 	std::vector<osuCrypto::block> result = u8vec_to_blocks(result_vec);
 	return result;
-
-
-
 }
 inline std::vector<osuCrypto::block> dh_oprf(u64 myIdx, std::vector<osuCrypto::block> x, std::vector<std::vector<Channel>> chls)
 {
@@ -58,7 +54,7 @@ inline std::vector<osuCrypto::block> dh_oprf(u64 myIdx, std::vector<osuCrypto::b
 	const auto &g = curve.getGenerator();
 	// receiver
 	if (myIdx == 0)
-	{	
+	{
 
 		// x is 1 block (element in cuckoo hash table)
 		AES pubHash(toBlock(12138));
@@ -76,7 +72,7 @@ inline std::vector<osuCrypto::block> dh_oprf(u64 myIdx, std::vector<osuCrypto::b
 		REccNumber a(curve);
 		a.randomize(prng);
 
-		//x_point *= a;
+		// x_point *= a;
 
 		std::vector<u8> x(33);
 		x_point.toBytes(x.data());
@@ -87,13 +83,13 @@ inline std::vector<osuCrypto::block> dh_oprf(u64 myIdx, std::vector<osuCrypto::b
 
 		x_point.fromBytes(x.data());
 
-		//inverse always outputs 1
-		// a = a.inverse();
-		// std::vector<u8> a_vec(32);
-		// a.toBytes(a_vec.data());
-		// print_u8vec(a_vec);
-		
-		//x_point *= a.inverse();
+		// inverse always outputs 1
+		//  a = a.inverse();
+		//  std::vector<u8> a_vec(32);
+		//  a.toBytes(a_vec.data());
+		//  print_u8vec(a_vec);
+
+		// x_point *= a.inverse();
 
 		x_point.toBytes(x.data());
 		x.erase(x.begin());
@@ -112,9 +108,8 @@ inline std::vector<osuCrypto::block> dh_oprf(u64 myIdx, std::vector<osuCrypto::b
 		REccPoint x_point;
 		x_point.fromBytes(recv_x_vec.data());
 
-		//print_block(x);
+		// print_block(x);
 		std::vector<u8> b_vec = blocks_to_u8vec(x);
-
 
 		REccNumber b(curve);
 
@@ -123,7 +118,6 @@ inline std::vector<osuCrypto::block> dh_oprf(u64 myIdx, std::vector<osuCrypto::b
 		x_point *= b;
 
 		x_point.toBytes(recv_x_vec.data());
-
 
 		chls[1][0].send(recv_x_vec.data(), recv_x_vec.size());
 
@@ -174,9 +168,9 @@ inline std::vector<osuCrypto::block> aes_oprf(u64 myIdx, std::vector<osuCrypto::
 
 inline void oprf_test()
 {
-	u64 setSize = 1 << 2;
-	u64 psiSecParam = 40;
-	u64 bitSize = 128;
+	u64 setSize = 1 << 10;
+	// u64 psiSecParam = 40;
+	// u64 bitSize = 128;
 	u64 nParties = 2;
 
 	// Create Channels
@@ -269,23 +263,30 @@ inline void oprf_test()
 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
 	{
 		pThrds[pIdx] = std::thread([&, pIdx]()
+
 								   {
 									   // block a = toBlock(123);
 									   // block result = dh_oprf(pIdx,a,chls);
 									   // std::cout<<"result "<<pIdx<<" "<<result<<std::endl;
 
 									   // std::vector<osuCrypto::block> result = aes_oprf(pIdx, inputSet[pIdx], setSize,chls,AES_keys[0]);
-									   if(pIdx == 0){
-										std::vector<osuCrypto::block> input = {toBlock(u64(123))};
-										std::vector<osuCrypto::block> result = dh_oprf(pIdx, input, chls);
-										print_block(result);
+									
+										if(pIdx == 0){
+											for(u64 i = 0;i<setSize;i++){
+												//std::vector<osuCrypto::block> input = {toBlock(u64(123))};
+												std::vector<osuCrypto::block> result = dh_oprf(pIdx, {inputSet_block[0][i]}, chls);
+												print_block(result);
+											}
+										
 
 									   }
 									   else if (pIdx == 1){
-										std::vector<osuCrypto::block> result = dh_oprf(pIdx, inputSet_block[pIdx], chls);
-										std::vector<osuCrypto::block> input = {toBlock(u64(123))};
-										std::vector<osuCrypto::block> result2 = dh_prf(input,inputSet_block[pIdx]);
-										print_block(result2);
+										for(u64 i = 0;i<setSize;i++){
+											std::vector<osuCrypto::block> result = dh_oprf(pIdx, {inputSet_block[1][i]}, chls);
+											//std::vector<osuCrypto::block> input = {toBlock(u64(123))};
+										//std::vector<osuCrypto::block> result2 = dh_prf(input,inputSet_block[pIdx]);
+										//print_block(result2);
+										}
 									   } });
 	}
 
