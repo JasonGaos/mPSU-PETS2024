@@ -1,3 +1,0 @@
-/home/jhgao/code/build/CMakeFiles/mpsu_make.dir
-/home/jhgao/code/build/CMakeFiles/edit_cache.dir
-/home/jhgao/code/build/CMakeFiles/rebuild_cache.dir
