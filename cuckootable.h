@@ -39,15 +39,19 @@ namespace osuCrypto
                 //swap into the bin
                 block temp_block = element;
                 u8 temp_hashid = curHash;
+                u64 temp_idx = idx;
+
                 element = items[cur_addr];
                 curHash = hashIds[cur_addr];
+                idx = item_idx[cur_addr];
+                
                 items[cur_addr] = temp_block;
                 hashIds[cur_addr] = temp_hashid;
+                item_idx[cur_addr] = temp_idx;
+                
 
                 if(element==toBlock(u64(0))){
                     //empty bin, insert seccess
-                    item_idx[cur_addr] = idx;
-                    //std::cout<<"num of try: "<<try_count<<std::endl;
                     return;
                 }else{
                     if(try_count<tryLimit){
