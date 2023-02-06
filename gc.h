@@ -37,69 +37,34 @@ vector<emp::Bit> _AgeqB(emp::NetIO *io, int party_id, long long number){
 }
 
 vector<emp::Bit> _AeqB(emp::NetIO *io, int party_id, long long number){
-	auto x = _AgeqB(io, party_id, number);
-	auto y = _AgeqB(io, party_id, -number);
-	// auto z1 = (x[0]&y[0])^(x[0]&y[1]);
-	// auto z2 = (x[1]&y[0])^(x[1]&y[1]);
-	emp::PRG prg;
-	bool r_;
-	prg.random_data(&r_,1);
-	emp::Bit r(r_);
-	//simply doing secand
-	emp::Bit r2 = (r^(x[0]&y[1]))^(x[1]&y[0]);
-	emp::Bit z1 = r^(x[0]&y[0]);
-	emp::Bit z2 = r2^(x[1]&y[1]);
-	return {z1,z2};
+   if(true){
+       Integer a(128, number, ALICE);
+       Integer b(128, number, BOB);
+       Bit res = (b == a);
+       PRG prg;
+       bool r_;
+       prg.random_data(&r_,sizeof(bool));
+       Bit r2(r_);
+       Bit r1 = res^r2;
+       bool r1_ = r1.reveal<bool>();
+       if(party_id==0)
+           cout << r_ << " " << r1_ <<endl;
+       return {r1, r2};
+   }else{
+       auto x = _AgeqB(io, party_id, number);
+       auto y = _AgeqB(io, party_id, -number);
+       // auto z1 = (x[0]&y[0])^(x[0]&y[1]);
+       // auto z2 = (x[1]&y[0])^(x[1]&y[1]);
+       emp::PRG prg;
+       bool r_;
+       prg.random_data(&r_,1);
+       emp::Bit r(r_);
+       //simply doing secand
+       emp::Bit r2 = (r^(x[0]&y[1]))^(x[1]&y[0]);
+       emp::Bit z1 = r^(x[0]&y[0]);
+       emp::Bit z2 = r2^(x[1]&y[1]);
+       return {z1,z2};
+   }
 }
 
-// void gc_test(){
-//     //thread 
-// 	std::vector<std::thread>  pThrds(2);
-// 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
-// 	{
-// 		pThrds[pIdx] = std::thread([&, pIdx]() {
-// 			int port = 1000;
-//             int party = pIdx;
-//             long long num = pIdx+1;
-//             emp::NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
-//             setup_semi_honest(io, party);
-
-// 	        auto z = _AeqB(io,party, num);
-//             std::cout<<"point 3"<<std::endl;
-// 	        bool bS = z[0].reveal<bool>();
-// 	        bool bR = z[1].reveal<bool>();
-// 	        cout << "bs "<<bS <<endl;
-// 	        cout << "br "<<bR <<endl;
-
-// 		});
-// 	}
-
-// 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
-// 		pThrds[pIdx].join();
-
-
-// }
-
-
-// int main(int argc, char** argv) {
-// 	int port, party;
-// 	parse_party_and_port(argv, &party, &port);
-// 	long long num = 20;
-// 	if(argc > 3)
-// 		num = atoll(argv[3]);
-// 	NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
-// 	setup_semi_honest(io, party);
-// 	auto z = _AeqB(io,party, num);
-// 	bool bS = z[0].reveal<bool>();
-// 	bool bR = z[1].reveal<bool>();
-// 	cout << "bs "<<bS <<endl;
-// 	cout << "br "<<bR <<endl;
-
-// 	delete io;
-// 	if (bS^bR){
-// 		cout << "Alice = Bob"<<endl;
-// 	}else{
-// 		cout << "Alice =/= Bob" << endl;
-// 	}
-// }
