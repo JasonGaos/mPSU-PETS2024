@@ -811,6 +811,7 @@ inline void psu2(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 	std::cout << IoStream::unlock;
 }
 
+
 inline void psu2_o(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto::block> inputSet_block, u64 nParties, u64 myIdx, u64 setSize, std::vector<std::vector<Channel>> chls)
 {
 
@@ -820,6 +821,17 @@ inline void psu2_o(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCryp
 
 	// u64 maxBinSize = log2(inputSet_u8.size());
 	u64 maxBinSize = 20;
+
+	switch((int)log2(inputSet_u8.size())){
+		case(8):
+		maxBinSize = 22;
+		case(12):
+		maxBinSize = 23;
+		case(16):
+		maxBinSize = 25;
+	}
+
+
 	// std::cout<<maxBinSize<<std::endl;
 	u64 tablesize = setSize * 1.27;
 	AES pubHash(toBlock(12138));
@@ -1052,7 +1064,6 @@ inline void psu2_o(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCryp
 		}
 		else if (myIdx == round)
 		{
-			auto start_oprf = timer.setTimePoint("start oprf");
 			// 3a---------------- oprf --------------------------------------------------
 			// chls
 			std::vector<std::vector<Channel>> chlsoprf(2, std::vector<Channel>(2));
@@ -1085,6 +1096,7 @@ inline void psu2_o(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCryp
 			setup_semi_honest(io, 1);
 
 			std::vector<std::array<osuCrypto::block, 2>> aes_keys = rpir_batched_sender(chlsrpir, cuckoo.items, maxBinSize + round - 1, io);
+			auto end_rpir = timer.setTimePoint("end rpir");
 
 			// message construction & encryption
 			PRNG prng_ot_aes(toBlock(12345678 + myIdx));
@@ -1156,7 +1168,7 @@ inline void psu2_o(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCryp
 				setup_semi_honest(io, 2);
 
 				std::vector<osuCrypto::block> aes_keys = rpir_batched_receiver(chlsrpir, simple.items, io);
-
+				auto end_rpir = timer.setTimePoint("end rpir");
 				// message parse
 
 				std::vector<osuCrypto::block> recv_aes_message_all(16 * simple.items.size());
@@ -1238,8 +1250,8 @@ inline void psu2_o(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCryp
 				chls[round][i].send(w_vec_all.data(), w_vec_all.size());
 
 				chls[round][i].send(rerand_ctx_block_all.data(), rerand_ctx_block_all.size());
+				auto end_coprf = timer.setTimePoint("end coprf");
 			}
-			auto end_coprf = timer.setTimePoint("end coprf");
 		}
 		else if (myIdx > round && myIdx < nParties)
 		{
@@ -1251,7 +1263,7 @@ inline void psu2_o(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCryp
 			emp::NetIO *io = new NetIO(nullptr, 5000 + round * 20 + myIdx);
 			setup_semi_honest(io, 1);
 			std::vector<std::array<osuCrypto::block, 2>> aes_keys = rpir_batched_sender(chlsrpir, cuckoo.items, maxBinSize, io);
-
+			auto end_rpir = timer.setTimePoint("end rpir");
 			// message construction
 			PRNG prngAlpha(_mm_set_epi32(4253465, 3434565, 234435, 1041));
 
@@ -1355,7 +1367,7 @@ inline void psu2_o(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCryp
 				// cuckoo
 				cuckoo.items[i] = u8vec_to_blocks(prf_vec)[0];
 				// simple
-				if (cuckoo.item_idx[i]!= -1)
+				if (cuckoo.item_idx[i] != -1)
 				{
 					for (u64 idx = 0; idx < idx_bin[cuckoo.item_idx[i]].size(); idx++)
 					{
@@ -1462,6 +1474,15 @@ inline void psu1(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 {
 	//=============================   Local Execution   ================================
 	u64 maxBinSize = 20;
+
+	switch((int)log2(inputSet_u8.size())){
+		case(8):
+		maxBinSize = 22;
+		case(12):
+		maxBinSize = 23;
+		case(16):
+		maxBinSize = 25;
+	}
 	// std::cout<<IoStream::lock;
 	// std::cout<<"P"<<myIdx<<" input"<<std::endl;
 	// for(u64 i = 0; i<inputSet_u8.size(); i++){
@@ -1469,6 +1490,10 @@ inline void psu1(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 	// }
 	// //print_block(inputSet_block);
 	// std::cout<<IoStream::unlock;
+
+	Timer timer;
+	timer.reset();
+	auto start = timer.setTimePoint("start");
 
 	// protocol
 	// 1.key exchange
@@ -1557,9 +1582,7 @@ inline void psu1(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 
 	//=============================   End of Local Execution   ================================
 
-	Timer timer;
-	timer.reset();
-	auto start = timer.setTimePoint("start");
+	auto online = timer.setTimePoint("online_start");
 
 	//=============================   OPRF Execution ==========================================
 	if (myIdx == 0)
@@ -1619,6 +1642,7 @@ inline void psu1(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 		inputSet_block = oprf_value;
 	}
 
+	auto oprf = timer.setTimePoint("oprf_end");
 	// cuckoo and simple hashing
 
 	u64 tablesize = 1.27 * setSize;
@@ -1665,7 +1689,7 @@ inline void psu1(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 
 		//--------------------------------------------------
 	}
-
+	auto hash = timer.setTimePoint("hash_end");
 	//===============================   mOT Execution   ================================
 
 	for (u64 round = 1; round < nParties; round++)
@@ -1732,6 +1756,7 @@ inline void psu1(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 				// update set_V
 				set_V.push_back(new_ctx);
 			}
+			auto mot = timer.setTimePoint("mot_end");
 		}
 		else if (myIdx == round)
 		{
@@ -1817,6 +1842,7 @@ inline void psu1(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 
 				chls[round][0].send(ot_messages.data(), ot_messages.size());
 			}
+			auto mot = timer.setTimePoint("mot_end");
 
 			// std::cout<<ot_messages.size()<<std::endl;
 		}
@@ -1855,7 +1881,7 @@ inline void psu1(std::vector<std::vector<u8>> inputSet_u8, std::vector<osuCrypto
 		}
 	}
 
-	auto end = timer.setTimePoint("end");
+	auto end = timer.setTimePoint("decrypt_end");
 
 	std::cout << IoStream::lock;
 	std::cout << " party " << myIdx << "\t" << timer << std::endl;
