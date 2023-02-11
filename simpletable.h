@@ -6,6 +6,7 @@
 namespace osuCrypto
 {
 
+   
     class SimpleTable
     {
     public:
@@ -64,6 +65,15 @@ namespace osuCrypto
             }
         }
 
+        void clear_table(){
+            for(u64 i = 0;i<items.size();i++){
+                if(items[i].size()!=0){
+					items[i].resize(0);
+				}
+            }
+        }
+
     };
+
 
 }
