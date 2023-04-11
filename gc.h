@@ -38,56 +38,119 @@ vector<emp::Bit> _AgeqB(emp::NetIO *io, int party_id, long long number)
     return {(z[0] >> 127).bits[0], !(z[1] >> 127).bits[0]};
 }
 
-vector<emp::Bit> _AeqB(emp::NetIO *io, int party_id, long long number)
-{
-    if (true)
-    {
-        Integer a(64, number, ALICE);
-        Integer b(64, number, BOB);
-        Bit res = 1;
-        for (int i = 0; i < 64; i++)
-        {
-            res = res ^ (a.bits[i] == b.bits[i]);
-            // std::cout<<i<<std::endl;
-        }
+// bool _AeqB(emp::NetIO *io, int party_id, long long number)
+// {
+//     Integer a(64, number, ALICE);
+//     Integer b(64, number, BOB);
+//     Bit res = a==b;
+//     return getLSB(res.bit);
+// }
 
-        PRG prg;
-        bool r_;
-        prg.random_data(&r_, sizeof(bool));
-        Bit r2(r_);
-        Bit r1 = res ^ r2;
-        return {r1, r2};
+// vector<bool> _AeqB(emp::NetIO *io, int party, vector<u64> numbers) {
+//     size_t share_size = numbers.size();
+//     vector<Integer> arr1(share_size);
+//     vector<Integer> arr2(share_size);
+//     vector<Bit> returns(share_size);
 
-        //    Integer a(64, number, ALICE);
-        //    Integer b(64, number, BOB);
-        //    Bit res = (b == a);
-        //    PRG prg;
-        //    bool r_;
-        //    prg.random_data(&r_,sizeof(bool));
-        //    Bit r2(r_);
-        //    Bit r1 = res^r2;
-        //    bool r1_ = r1.reveal<bool>();
-        //    if(party_id==0)
-        //        cout << r_ << " " << r1_ <<endl;
-        //    return {r1, r2};
-    }
-    else
-    {
-        auto x = _AgeqB(io, party_id, number);
-        auto y = _AgeqB(io, party_id, -number);
-        // auto z1 = (x[0]&y[0])^(x[0]&y[1]);
-        // auto z2 = (x[1]&y[0])^(x[1]&y[1]);
-        emp::PRG prg;
-        bool r_;
-        prg.random_data(&r_, 1);
-        emp::Bit r(r_);
-        // simply doing secand
-        emp::Bit r2 = (r ^ (x[0] & y[1])) ^ (x[1] & y[0]);
-        emp::Bit z1 = r ^ (x[0] & y[0]);
-        emp::Bit z2 = r2 ^ (x[1] & y[1]);
-        return {z1, z2};
-    }
+//     for (size_t i = 0; i < share_size; i++) 
+//         arr1[i] = Integer(64, numbers[i], ALICE);
+//     for (size_t i = 0; i < share_size; i++) 
+//         arr2[i] = Integer(64, numbers[i], BOB);
+//     for (size_t i = 0; i < share_size; i++) 
+//         returns[i] = (arr1[i] == arr2[i]);
+    
+
+//     vector<bool> bS(share_size);
+//     for(size_t i = 0; i < share_size; ++i)
+//         bS[i] = getLSB(returns[i].bit);
+
+//     return bS;
+// }
+vector<emp::Bit> _AeqB(emp::NetIO *io, int party_id, long long number){
+   if(true){
+       Integer a(128, number, ALICE);
+       Integer b(128, number, BOB);
+       Bit res = (b == a);
+       PRG prg;
+       bool r_;
+       prg.random_data(&r_,sizeof(bool));
+       Bit r2(r_);
+       Bit r1 = res^r2;
+       bool r1_ = r1.reveal<bool>();
+       if(party_id==0)
+           cout << r_ << " " << r1_ <<endl;
+       return {r1, r2};
+   }else{
+       auto x = _AgeqB(io, party_id, number);
+       auto y = _AgeqB(io, party_id, -number);
+       // auto z1 = (x[0]&y[0])^(x[0]&y[1]);
+       // auto z2 = (x[1]&y[0])^(x[1]&y[1]);
+       emp::PRG prg;
+       bool r_;
+       prg.random_data(&r_,1);
+       emp::Bit r(r_);
+       //simply doing secand
+       emp::Bit r2 = (r^(x[0]&y[1]))^(x[1]&y[0]);
+       emp::Bit z1 = r^(x[0]&y[0]);
+       emp::Bit z2 = r2^(x[1]&y[1]);
+       return {z1,z2};
+   }
 }
+
+
+
+// vector<bool> _AeqB(emp::NetIO *io, int party_id, long long number)
+// {
+//     // if (true)
+//     // {
+//         Integer a(64, number, ALICE);
+//         Integer b(64, number, BOB);
+//         Bit res = 1;
+//         for (int i = 0; i < 64; i++)
+//         {
+//             res = res & (a.bits[i] == b.bits[i]);
+//             // std::cout<<i<<std::endl;
+//         }
+
+//         PRG prg;
+//         bool r_;
+//         prg.random_data(&r_, sizeof(bool));
+//         // Bit r2(r_);
+//         bool r1 = res.reveal<bool>() ^ r_;
+//         // std::vector<Bit> r = {r1,r2}
+
+//         return {r1, r_};
+
+//         //    Integer a(64, number, ALICE);
+//         //    Integer b(64, number, BOB);
+//         //    Bit res = (b == a);
+//         //    PRG prg;
+//         //    bool r_;
+//         //    prg.random_data(&r_,sizeof(bool));
+//         //    Bit r2(r_);
+//         //    Bit r1 = res^r2;
+//         //    bool r1_ = r1.reveal<bool>();
+//         //    if(party_id==0)
+//         //        cout << r_ << " " << r1_ <<endl;
+//         //    return {r1, r2};
+//     // }
+//     // else
+//     // {
+//     //     auto x = _AgeqB(io, party_id, number);
+//     //     auto y = _AgeqB(io, party_id, -number);
+//     //     // auto z1 = (x[0]&y[0])^(x[0]&y[1]);
+//     //     // auto z2 = (x[1]&y[0])^(x[1]&y[1]);
+//     //     emp::PRG prg;
+//     //     bool r_;
+//     //     prg.random_data(&r_, 1);
+//     //     emp::Bit r(r_);
+//     //     // simply doing secand
+//     //     emp::Bit r2 = (r ^ (x[0] & y[1])) ^ (x[1] & y[0]);
+//     //     emp::Bit z1 = r ^ (x[0] & y[0]);
+//     //     emp::Bit z2 = r2 ^ (x[1] & y[1]);
+//     //     return {z1, z2};
+//     // }
+// }
 
 // void gc_test(){
 //     //thread
