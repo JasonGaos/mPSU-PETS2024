@@ -27,14 +27,14 @@ inline std::vector<osuCrypto::block> dh_prf(std::vector<osuCrypto::block> x, std
 
 	REccNumber hq_num(curve);
 	hq_num.fromBytes(hq_vec.data());
-
+	//comment out for comparision
 	REccPoint x_point = g * hq_num;
 
 	std::vector<u8> key_vec = blocks_to_u8vec(key);
 
 	REccNumber key_num(curve);
 	key_num.fromBytes(key_vec.data());
-
+	//comment out for comparision
 	x_point *= key_num;
 
 	std::vector<u8> result_vec(33);
