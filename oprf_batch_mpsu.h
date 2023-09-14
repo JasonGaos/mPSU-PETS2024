@@ -13,6 +13,7 @@
 #include "oprf_mpsu.h"
 
 using namespace osuCrypto;
+
 inline std::vector<osuCrypto::block> dh_oprf_batched(AES pubHash, REllipticCurve curve, u64 myIdx, std::vector<osuCrypto::block> x, std::vector<std::vector<Channel>> chls, u64 size_oprf)
 {
     PRNG prng(_mm_set_epi32(4253465, 3434565, 234435, 1041));
@@ -20,7 +21,7 @@ inline std::vector<osuCrypto::block> dh_oprf_batched(AES pubHash, REllipticCurve
     {
         std::vector<u8> inter_data;
         for (u64 i = 0; i < size_oprf; i++)
-        {   
+        {
 
             std::vector<osuCrypto::block> oprf_value = {x[i]};
             std::vector<osuCrypto::block> H_q(oprf_value.size());
@@ -57,8 +58,7 @@ inline std::vector<osuCrypto::block> dh_oprf_batched(AES pubHash, REllipticCurve
         std::vector<osuCrypto::block> result;
 
         for (u64 i = 0; i < size_oprf; i++)
-        {   
-
+        {
             std::vector<u8> inter_vec = {inter_data.begin() + 33 * i, inter_data.begin() + 33 * (i + 1)};
             REccPoint x_point(curve);
             x_point.fromBytes(inter_vec.data());
@@ -69,13 +69,12 @@ inline std::vector<osuCrypto::block> dh_oprf_batched(AES pubHash, REllipticCurve
             //  print_u8vec(a_vec);
 
             // x_point *= a.inverse();
-            
+
             x_point.toBytes(inter_vec.data());
             inter_vec.erase(inter_vec.begin());
             std::vector<osuCrypto::block> inter_block = u8vec_to_blocks(inter_vec);
             // result.insert(result.end(), inter_block.begin(), inter_block.end());
             result.push_back(inter_block[0]);
-
         }
         return result;
     }
@@ -86,12 +85,13 @@ inline std::vector<osuCrypto::block> dh_oprf_batched(AES pubHash, REllipticCurve
 
         std::vector<u8> send_inter_data;
         for (u64 i = 0; i < size_oprf; i++)
-        {   
+        {
             // std::cout<<i<<std::endl;
             // input is key of 2 block
+
             std::vector<u8> recv_x_vec = {rec_inter_data.begin() + 33 * i, rec_inter_data.begin() + 33 * (i + 1)};
 
-            REccPoint x_point;
+            REccPoint x_point(curve);
 
             x_point.fromBytes(recv_x_vec.data());
 
@@ -102,13 +102,14 @@ inline std::vector<osuCrypto::block> dh_oprf_batched(AES pubHash, REllipticCurve
 
             b.fromBytes(b_vec.data());
 
+            //comment out for comparision
             x_point *= b;
 
             x_point.toBytes(recv_x_vec.data());
 
             send_inter_data.insert(send_inter_data.end(), recv_x_vec.begin(), recv_x_vec.end());
-            // std::cout<<i<<std::endl;
         }
+
         chls[1][0].send(send_inter_data.data(), send_inter_data.size());
 
         // return the key
@@ -117,6 +118,214 @@ inline std::vector<osuCrypto::block> dh_oprf_batched(AES pubHash, REllipticCurve
 }
 
 
+inline std::vector<osuCrypto::block> dh_oprf_batched_multiThreads(AES pubHash, u64 myIdx, std::vector<osuCrypto::block> x, std::vector<std::vector<Channel>> chls, u64 size_oprf,int numThreads)
+{
+    PRNG prng(_mm_set_epi32(4253465, 3434565, 234435, 1041));
+    
+    if (myIdx == 0)
+    {      
+        std::vector<u8> inter_data(size_oprf*33,0);
+        vector<thread> threads(numThreads);
+        u64 batch_size = size_oprf/numThreads;
+        for(int t = 0;t<numThreads;t++){
+		threads[t] = std::thread([&,t](){
+			u64 start, end;
+            start = t*batch_size;
+
+            if(t!=numThreads-1){
+                end = (t+1)*batch_size;
+            }else{
+                end = size_oprf;
+            }
+            REllipticCurve curve;
+            for (u64 i = start; i < end; i++)
+            {
+
+            std::vector<osuCrypto::block> oprf_value = {x[i]};
+
+            std::vector<osuCrypto::block> H_q(oprf_value.size());
+
+            pubHash.ecbEncBlocks(oprf_value.data(), oprf_value.size(), H_q.data());
+
+            std::vector<u8> hq_vec = block_to_u8vec(H_q[0], 32);
+
+            REccNumber hq_num(curve);
+
+            hq_num.fromBytes(hq_vec.data());
+
+            // hq_num.randomize(prng);
+
+            REccPoint x_point = curve.getGenerator() * hq_num;
+
+            REccNumber a(curve);
+
+            a.randomize(prng);
+
+            // x_point *= a;
+            // a.inverse();
+            std::vector<u8> inter_vec(33);
+
+            x_point.toBytes(inter_vec.data());
+
+            // inter_data.insert(inter_data.end(), inter_vec.begin(), inter_vec.end());
+            std::copy(inter_vec.begin(),inter_vec.end(),inter_data.begin()+(i)*33);
+
+            }
+
+            
+
+	        });
+   	    }
+	
+   	    for(int t = 0;t<numThreads;t++){
+            threads[t].join();
+   	    }
+        
+
+        chls[0][1].send(inter_data.data(), inter_data.size());
+
+        chls[0][1].recv(inter_data.data(), inter_data.size());
+
+        std::vector<osuCrypto::block> result(size_oprf);
+        
+        for(int t = 0;t<numThreads;t++){
+		threads[t] = std::thread([&,t](){
+			u64 start, end;
+            start = t*batch_size;
+
+            if(t!=numThreads-1){
+                end = (t+1)*batch_size;
+            }else{
+                end = size_oprf;
+            }
+            REllipticCurve curve;
+
+            for (u64 i = start; i < end; i++)
+            {
+                std::vector<u8> inter_vec = {inter_data.begin() + 33 * i, inter_data.begin() + 33 * (i + 1)};
+                REccPoint x_point(curve);
+                x_point.fromBytes(inter_vec.data());
+                // inverse always outputs 1
+                //  a = a.inverse();
+                //  std::vector<u8> a_vec(32);
+                //  a.toBytes(a_vec.data());
+                //  print_u8vec(a_vec);
+
+                // x_point *= a.inverse();
+
+                x_point.toBytes(inter_vec.data());
+                inter_vec.erase(inter_vec.begin());
+                std::vector<osuCrypto::block> inter_block = u8vec_to_blocks(inter_vec);
+                // result.insert(result.end(), inter_block.begin(), inter_block.end());
+                // result.push_back(inter_block[0]);
+                result[i] = inter_block[0];
+            }
+
+            });
+   	    }
+	
+   	    for(int t = 0;t<numThreads;t++){
+            threads[t].join();
+   	    }
+
+        return result;
+    }
+    else if (myIdx == 1)
+    {
+        std::vector<u8> rec_inter_data(33 * size_oprf);
+        chls[1][0].recv(rec_inter_data.data(), rec_inter_data.size());
+        // REllipticCurve curve;
+        std::vector<u8> send_inter_data(size_oprf*33);
+
+        vector<thread> threads(numThreads);
+        u64 batch_size = size_oprf/numThreads;
+        for(int t = 0;t<numThreads;t++){
+		threads[t] = std::thread([&,t](){
+			u64 start, end;
+            start = t*batch_size;
+
+            if(t!=numThreads-1){
+                end = (t+1)*batch_size;
+            }else{
+                end = size_oprf;
+            }
+            REllipticCurve curve;
+            for (u64 i = start; i < end; i++)
+            {
+
+                // input is key of 2 block
+
+                std::vector<u8> recv_x_vec = {rec_inter_data.begin() + 33 * i, rec_inter_data.begin() + 33 * (i + 1)};
+
+                REccPoint x_point(curve);
+
+                x_point.fromBytes(recv_x_vec.data());
+
+                // print_block(x);
+                std::vector<u8> b_vec = blocks_to_u8vec(x);
+
+                REccNumber b(curve);
+
+                b.fromBytes(b_vec.data());
+
+                //comment out for comparision
+                x_point *= b;
+
+                x_point.toBytes(recv_x_vec.data());
+
+                // send_inter_data.insert(send_inter_data.end(), recv_x_vec.begin(), recv_x_vec.end());
+                std::copy(recv_x_vec.begin(),recv_x_vec.end(),send_inter_data.begin()+i*33);
+            }
+            });
+   	    }
+	
+   	    for(int t = 0;t<numThreads;t++){
+            threads[t].join();
+   	    }
+        
+        chls[1][0].send(send_inter_data.data(), send_inter_data.size());
+
+        // return the key
+        return x;
+    }
+}
+
+
+
+inline void makeup_test()
+{
+    for (int i = 0; i < 5; i++)
+    {
+        Timer timer;
+        PRNG prng(_mm_set_epi32(4253465, 3434565, 234435, 1041));
+
+        REllipticCurve curve; //(CURVE_25519)
+
+        REccNumber a(curve);
+
+        a.randomize(prng);
+        REccPoint x = curve.getGenerator() * a;
+
+        timer.reset();
+
+        u64 setSize = {1 << 16};
+        auto start = timer.setTimePoint("start");
+
+        for (u64 i = 0; i < setSize * 1.27; i++)
+        {
+
+            x *= a;
+
+            // a.inverse();
+
+            x *= a;
+        }
+
+        auto end = timer.setTimePoint("end");
+
+        std::cout << timer << std::endl;
+    }
+}
 
 inline void oprf_batched_test()
 {
@@ -199,11 +408,12 @@ inline void oprf_batched_test()
             inputSet_block[i].push_back(p_block[1]);
         }
     }
-    
+
     std::cout << inputSet_block[0].size() << std::endl;
     std::vector<osuCrypto::block> oprf(inputSet_u8.size());
-    for(u64 i = 0;i<setSize;i++){
-        oprf[i] = inputSet_block[0][2*i];
+    for (u64 i = 0; i < setSize; i++)
+    {
+        oprf[i] = inputSet_block[0][2 * i];
     }
 
     // PRNG prngAES(_mm_set_epi32(123, 3434565, 234435, 23987054));
