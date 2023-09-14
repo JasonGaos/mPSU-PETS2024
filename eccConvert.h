@@ -8,6 +8,7 @@
 #include <cryptoTools/Network/IOService.h>
 #include <cryptoTools/Crypto/PRNG.h>
 #include <cryptoTools/Crypto/AES.h>
+#include <cryptoTools/Common/Timer.h>
 
 // #include "libOTe/TwoChooseOne/IknpOtExtReceiver.h"
 // #include "libOTe/TwoChooseOne/IknpOtExtSender.h"
@@ -227,7 +228,7 @@ inline std::vector<osuCrypto::block> ciphertexts_to_blocks(std::vector<std::vect
 	return a;
 }
 
-inline std::vector<std::vector<u8>> rerandomize(std::vector<std::vector<u8>> ctx, std::vector<u8>pk_vec)
+inline std::vector<std::vector<u8>> rerandomize(std::vector<std::vector<u8>> ctx, std::vector<u8> pk_vec)
 {
 
 	REllipticCurve curve; //(CURVE_25519)
@@ -247,9 +248,37 @@ inline std::vector<std::vector<u8>> rerandomize(std::vector<std::vector<u8>> ctx
 	ctx1.fromBytes(ctx[0].data());
 	ctx2.fromBytes(ctx[1].data());
 
+	ctx1 += gr;
+	ctx2 += pk * r;
+
+	ctx1.toBytes(ctx[0].data());
+	ctx2.toBytes(ctx[1].data());
+
+	return ctx;
+}
+
+inline std::vector<std::vector<u8>> rerandomize_o(std::vector<std::vector<u8>> ctx, REccPoint gr, REccPoint pkr)
+{
+
+	REllipticCurve curve; //(CURVE_25519)
+	// PRNG prng(_mm_set_epi32(19249, 4923, 233121465, 123));
+	// const auto &g = curve.getGenerator();
+	// REccNumber r(curve);
+	// r.randomize(prng);
+
+	// REccPoint gr(curve);
+	// gr = g * r;
+
+	// REccPoint pk(curve);
+	// pk.fromBytes(pk_vec.data());
+
+	REccPoint ctx1(curve);
+	REccPoint ctx2(curve);
+	ctx1.fromBytes(ctx[0].data());
+	ctx2.fromBytes(ctx[1].data());
 
 	ctx1 += gr;
-	ctx2 += pk*r;
+	ctx2 += pkr;
 
 	ctx1.toBytes(ctx[0].data());
 	ctx2.toBytes(ctx[1].data());
@@ -335,7 +364,7 @@ inline std::vector<std::vector<u8>> encryption(std::vector<u8> m_vec, std::vecto
 	REccPoint m(curve);
 
 	m.fromBytes(m_vec.data());
-	// std::cout<<" 6 " <<std::endl;
+
 	REccNumber r(curve);
 	r.randomize(prng_enc);
 
@@ -355,9 +384,47 @@ inline std::vector<std::vector<u8>> encryption(std::vector<u8> m_vec, std::vecto
 	return ciphertext;
 }
 
+inline std::vector<std::vector<u8>> encryption_r(std::vector<u8> m_vec, std::vector<u8> pk_vec, PRNG &prng_enc)
+{
+	// Encryption and Decryption testing (ElGamal)
+	REllipticCurve curve; //(CURVE_25519)
+
+	// generater g
+	const auto &g = curve.getGenerator();
+	// std::cout <<g.sizeBytes()<< std::endl;
+	// sk
+
+	REccPoint pk;
+	pk.fromBytes(pk_vec.data());
+
+	m_vec.insert(m_vec.begin(), 2);
+
+	REccPoint m(curve);
+
+	m.fromBytes(m_vec.data());
+	// std::cout<<" 6 " <<std::endl;
+	REccNumber r(curve);
+	r.randomize(prng_enc);
+
+	REccPoint c1; //= g * r;
+	REccPoint c2 = m + pk * r;
+
+	std::vector<u8> c1_vec(g.sizeBytes());
+	std::vector<u8> c2_vec(g.sizeBytes());
+
+	c1.toBytes(c1_vec.data());
+	c2.toBytes(c2_vec.data());
+
+	std::vector<std::vector<u8>> ciphertext;
+	ciphertext.push_back(c1_vec);
+	ciphertext.push_back(c2_vec);
+
+	return ciphertext;
+}
+
 inline std::vector<u8> decryption(std::vector<std::vector<u8>> ciphertext, std::vector<u8> sk_vec)
 {
-	// REllipticCurve curve;//(CURVE_25519)
+	REllipticCurve curve;//(CURVE_25519)
 
 	REccPoint c1;
 	REccPoint c2;
@@ -365,7 +432,7 @@ inline std::vector<u8> decryption(std::vector<std::vector<u8>> ciphertext, std::
 	c1.fromBytes(ciphertext[0].data());
 	c2.fromBytes(ciphertext[1].data());
 	sk.fromBytes(sk_vec.data());
-
+	//comment out for comparision
 	REccPoint dec_m = c2 - c1 * sk;
 
 	std::vector<u8> dec_m_vec(33);
@@ -384,6 +451,7 @@ inline std::vector<u8> decryption(std::vector<std::vector<u8>> ciphertext, std::
 inline std::vector<std::vector<u8>> partial_decryption(std::vector<std::vector<u8>> ciphertext, std::vector<u8> sk_vec)
 {
 	// output a ctx
+	REllipticCurve curve;//(CURVE_25519)
 
 	REccPoint c1;
 	REccPoint c2;
@@ -395,6 +463,7 @@ inline std::vector<std::vector<u8>> partial_decryption(std::vector<std::vector<u
 	// REccPoint r;
 	// r.randomize(prng_dec);
 
+	//comment out for comparision
 	c2 -= c1 * sk;
 	std::vector<u8> new_ctx1 = ciphertext[0];
 	std::vector<u8> new_ctx2(33);
@@ -409,44 +478,9 @@ inline std::vector<std::vector<u8>> partial_decryption(std::vector<std::vector<u
 
 inline void ecc_channel_test()
 {
-	u64 setSize = 1 << 4;
-	u64 psiSecParam = 40;
-	u64 bitSize = 128;
+
+	u64 setSize = 1 << 16;
 	u64 nParties = 2;
-
-	// Create Channels
-	IOService ios(0);
-
-	auto ip = std::string("127.0.0.1");
-
-	std::string sessionHint = "psu";
-
-	std::vector<std::vector<Session>> ssns(nParties, std::vector<Session>(nParties));
-	std::vector<std::vector<Channel>> chls(nParties, std::vector<Channel>(nParties));
-
-	for (u64 i = 0; i < nParties; i++)
-	{
-		for (u64 j = 0; j < nParties; j++)
-		{
-			if (i < j)
-			{
-				u32 port = 1100 + j * 100 + i;
-				std::string serversIpAddress = ip + ':' + std::to_string(port);
-				ssns[i][j].start(ios, serversIpAddress, SessionMode::Server, sessionHint);
-
-				chls[i][j] = ssns[i][j].addChannel();
-				// ep[i].start(ios, "localhost", port, true, name); //channel bwt i and pIdx, where i is receiver
-			}
-			else if (i > j)
-			{
-				u32 port = 1100 + i * 100 + j;
-				std::string serversIpAddress = ip + ':' + std::to_string(port);
-				ssns[i][j].start(ios, serversIpAddress, SessionMode::Client, sessionHint);
-				chls[i][j] = ssns[i][j].addChannel();
-				// ep[i].start(ios, "localhost", port, false, name); //channel bwt i and pIdx, where i is sender
-			}
-		}
-	}
 
 	// rerandomize test (ElGamal)
 	REllipticCurve curve; //(CURVE_25519)
@@ -477,104 +511,234 @@ inline void ecc_channel_test()
 	// nParties * 2setSize  vector
 	std::vector<std::vector<osuCrypto::block>> inputSet_block(nParties);
 
-
-	REccPoint a(curve);
-	a.randomize(prng);
-
-	for (u64 i = 0; i < nParties; i++)
+	for (int iteration = 0; iteration < 1; iteration++)
 	{
-		PRNG prngSame(_mm_set_epi32(4253465, 3434565, 234435, 23987054));
-		PRNG prngDiff(_mm_set_epi32(4253465, 3434565, 234423, i));
-		// std::cout<<"input from party "<<i<<std::endl;
-		REllipticCurve curve; //(CURVE_25519)
-		// generater g
-		const auto &g = curve.getGenerator();
-		for (u64 j = 0; j < setSize; j++)
+
+		// u64 setSize = 1 << 8;
+		// u64 psiSecParam = 40;
+		// u64 bitSize = 128;
+		// u64 nParties = 3;
+
+		// Create Channels
+		IOService ios(0);
+
+		auto ip = std::string("127.0.0.1");
+
+		std::string sessionHint = "psu";
+
+		std::vector<std::vector<Session>> ssns(nParties, std::vector<Session>(nParties));
+		std::vector<std::vector<Channel>> chls(nParties, std::vector<Channel>(nParties));
+
+		for (u64 i = 0; i < nParties; i++)
 		{
-
-			REccNumber num(curve);
-
-			if (j < setSize / 2)
+			for (u64 j = 0; j < nParties; j++)
 			{
-				num.randomize(prngSame);
-			}
-			else
-			{
-				num.randomize(prngDiff);
-			}
-			REccPoint p = g * num;
-			std::vector<u8> p_vec(g.sizeBytes());
-			p.toBytes(p_vec.data());
-			p_vec.erase(p_vec.begin());
-			// print_u8vec(p_vec);
-			inputSet_u8[i].push_back(p_vec);
-			std::vector<osuCrypto::block> p_block = u8vec_to_blocks(p_vec);
-			inputSet_block[i].push_back(p_block[0]);
-			inputSet_block[i].push_back(p_block[1]);
+				if (i < j)
+				{
+					u32 port = 1100 + j * 100 + i;
+					std::string serversIpAddress = ip + ':' + std::to_string(port);
+					ssns[i][j].start(ios, serversIpAddress, SessionMode::Server, sessionHint);
 
-			// it is safe to erase the first bit (give 2 later still generate a valid point)
-			//  p_vec.erase(p_vec.begin());
-			//  p_vec.insert(p_vec.begin(), 2);
-			//  p.fromBytes(p_vec.data());
-		}
-	}
-
-	print_u8vec(inputSet_u8[0][0]);
-
-	std::vector<std::vector<std::vector<u8>>> encrypt_set;
-
-	for (u64 i = 0; i < inputSet_u8.size(); i++)
-	{
-		// std::cout<<inputSet_u8[i]<<std::endl;
-		// print_u8vec(pk_vec);
-		std::vector<std::vector<u8>> ciphertext = encryption(inputSet_u8[0][i], pk_vec, prng_enc);
-		encrypt_set.push_back(ciphertext);
-	}
-	//first half of ctx
-	print_u8vec(encrypt_set[0][0]);
-
-	std::vector<u8> message = decryption(encrypt_set[0], sk_vec);
-
-	print_u8vec(message);
-
-	std::vector<std::vector<u8>> rerand_m = rerandomize(encrypt_set[0],pk_vec);
-
-	//first half of ctx
-	print_u8vec(rerand_m[0]);
-
-	std::vector<u8> r_message = decryption(rerand_m, sk_vec);
-
-	print_u8vec(r_message);
-
-
-
-	
-
-	chls[0][1].send(pk_vec.data(), pk_vec.size());
-	std::vector<u8> recv_pk_vec(g.sizeBytes());
-	chls[1][0].recv(recv_pk_vec.data(), recv_pk_vec.size());
-
-	// Close channels
-	for (u64 i = 0; i < nParties; i++)
-	{
-		for (u64 j = 0; j < nParties; j++)
-		{
-			if (i != j)
-			{
-				chls[i][j].close();
+					chls[i][j] = ssns[i][j].addChannel();
+					// ep[i].start(ios, "localhost", port, true, name); //channel bwt i and pIdx, where i is receiver
+				}
+				else if (i > j)
+				{
+					u32 port = 1100 + i * 100 + j;
+					std::string serversIpAddress = ip + ':' + std::to_string(port);
+					ssns[i][j].start(ios, serversIpAddress, SessionMode::Client, sessionHint);
+					chls[i][j] = ssns[i][j].addChannel();
+					// ep[i].start(ios, "localhost", port, false, name); //channel bwt i and pIdx, where i is sender
+				}
 			}
 		}
-	}
-	for (u64 i = 0; i < nParties; i++)
-	{
-		for (u64 j = 0; j < nParties; j++)
+
+		// set generation
+		// first half of same elements and second half of different elements.s
+
+		// ECC Points
+		// nParties * setSize * 32 u8 vector
+		std::vector<std::vector<std::vector<u8>>> inputSet_u8(nParties);
+		// nParties * 2setSize  vector
+		std::vector<std::vector<osuCrypto::block>> inputSet_block(nParties);
+
+		for (u64 i = 0; i < nParties; i++)
 		{
-			if (i != j)
+			PRNG prngSame(_mm_set_epi32(4253465, 3434565, 234435, 23987054));
+			PRNG prngDiff(_mm_set_epi32(4253465, 3434565, 234423, i));
+			// std::cout<<"input from party "<<i<<std::endl;
+			REllipticCurve curve; //(CURVE_25519)
+			// generater g
+			const auto &g = curve.getGenerator();
+			for (u64 j = 0; j < setSize; j++)
 			{
-				ssns[i][j].stop();
+
+				REccNumber num(curve);
+
+				if (j < setSize / 2)
+				{
+					num.randomize(prngSame);
+				}
+				else
+				{
+					num.randomize(prngDiff);
+				}
+				REccPoint p = g * num;
+				std::vector<u8> p_vec(g.sizeBytes());
+				p.toBytes(p_vec.data());
+				p_vec.erase(p_vec.begin());
+				// print_u8vec(p_vec);
+				inputSet_u8[i].push_back(p_vec);
+				std::vector<osuCrypto::block> p_block = u8vec_to_blocks(p_vec);
+				inputSet_block[i].push_back(p_block[0]);
+				inputSet_block[i].push_back(p_block[1]);
+
+				// it is safe to erase the first bit (give 2 later still generate a valid point)
+				//  p_vec.erase(p_vec.begin());
+				//  p_vec.insert(p_vec.begin(), 2);
+				//  p.fromBytes(p_vec.data());
 			}
 		}
+		std::cout << "================================================" << std::endl;
+		std::cout << "number of parties: " << nParties << std::endl;
+		std::cout << "set size: " << inputSet_u8[0].size() << std::endl;
+		std::cout << "================================================" << std::endl;
+
+		// std::cout << "number of blocks: " << inputSet_block[0].size() << std::endl;
+
+		// thread
+		std::vector<std::thread> pThrds(nParties);
+		for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
+		{
+			pThrds[pIdx] = std::thread([&, pIdx]()
+									   { 
+										// Encryption and Decryption testing (ElGamal)
+										REllipticCurve curve; //(CURVE_25519)
+										const auto &g = curve.getGenerator();
+
+										REccNumber r(curve);
+										r.randomize(prng_enc);
+
+										REccPoint c1;//= g * r;
+										Timer timer1;
+										timer1.reset();
+										
+										auto start1 = timer1.setTimePoint("start");
+
+										for(int i = 0;i<inputSet_u8[0].size();i++){
+											c1 = c1 + g*r;
+											//encryption_r(inputSet_u8[0][i],pk_vec,prng_enc);
+										} 
+										auto end1 = timer1.setTimePoint("end");
+										std::cout << timer1 << std::endl; });
+		}
+
+		for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
+			pThrds[pIdx].join();
+
+		// Close channels
+		for (u64 i = 0; i < nParties; i++)
+		{
+			for (u64 j = 0; j < nParties; j++)
+			{
+				if (i != j)
+				{
+					chls[i][j].close();
+				}
+			}
+		}
+
+		for (u64 i = 0; i < nParties; i++)
+		{
+			for (u64 j = 0; j < nParties; j++)
+			{
+				if (i != j)
+				{
+					ssns[i][j].stop();
+				}
+			}
+		}
+
+		ios.stop();
+	}
+}
+
+inline void convert_test()
+{
+	REllipticCurve curve; //(CURVE_25519)
+	PRNG prng(_mm_set_epi32(19249, 4923, 2335, 123));
+	PRNG prng_r(_mm_set_epi32(4253465, 3434565, 23443, 1231));
+	PRNG prng_enc(_mm_set_epi32(42512365, 3434565, 23443, 1231));
+	// generater g
+	const auto &g = curve.getGenerator();
+	// std::cout <<g.sizeBytes()<< std::endl;
+	// sk
+	REccNumber sk(curve);
+	sk.randomize(prng);
+	std::vector<u8> sk_vec(g.sizeBytes() - 1);
+	sk.toBytes(sk_vec.data());
+
+	Timer timer1;
+	timer1.reset();
+	auto start1 = timer1.setTimePoint("start");
+
+	for (u64 i = 0; i < 1024 * 1024; i++)
+	{
+		std::vector<u8> u8_vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
+		// print_u8vec(u8_vec);
+		//  osuCrypto::block b = prng.get<osuCrypto::block>();
+		osuCrypto::block b = toBlock(u64(1));
+		// std::cout<<b<<std::endl;
+
+		osuCrypto::block *b_ptr = (osuCrypto::block *)u8_vec.data() + 1;
+		b = *b_ptr;
+
+		// std::cout<<b<<std::endl;
+
+		// std::cout<<std::hex<<unsigned(u8_vec[15])<<std::endl;
+		// std::cout<<u8vec_to_block(u8_vec,32)<<std::endl;
 	}
 
-	ios.stop();
+	auto end1 = timer1.setTimePoint("end");
+
+	std::cout << timer1 << std::endl;
+
+	Timer timer2;
+	timer2.reset();
+	auto start2 = timer2.setTimePoint("start");
+
+	for (u64 i = 0; i < 1024 * 1024; i++)
+	{
+		std::vector<u8> u8_vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
+		// print_u8vec(u8_vec);
+		//  osuCrypto::block b = prng.get<osuCrypto::block>();
+		osuCrypto::block b = toBlock(u64(1));
+		// std::cout<<b<<std::endl;
+
+		b = u8vec_to_block(u8_vec, 32);
+		// osuCrypto::block *b_ptr =  (osuCrypto::block*) u8_vec.data()+1;
+		// b = *b_ptr;
+
+		// std::cout<<b<<std::endl;
+
+		// std::cout<<std::hex<<unsigned(u8_vec[15])<<std::endl;
+		// std::cout<<u8vec_to_block(u8_vec,32)<<std::endl;
+	}
+
+	auto end2 = timer2.setTimePoint("end");
+
+	std::cout << timer2 << std::endl;
+	// std::vector<u8> u8_vec2(16,1);
+	// std::vector<osuCrypto::block> a = {b};
+	// std::cout<<&b<<std::endl;
+
+	// std::vector<u8>* u8_ptr = new std::vector<u8>(16);
+
+	// u8_ptr = (std::vector<u8>*) &b;
+	// std::cout<<(*u8_ptr).size()<<std::endl;
+	// print_u8vec(*u8_ptr);
+	// std::cout<<(*u8_ptr).size()<<std::endl;
+	// u8_vec2 = *u8_ptr;
+	// std::cout<<"123"<<std::endl;
+	// print_u8vec(u8_vec2);
 }
