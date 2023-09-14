@@ -10,3 +10,11 @@ commit 2363505431f744539027a873c2536b9ae3630ff7
 2. To have garble circuit we use a custimized library of emptools.
 https://github.com/personwhofloat/emptool_private_compare/tree/master
 
+
+to run the project,
+cd build
+cmake ..
+make && ./mpsu.exe
+
+there will be an error messages for the first time to run the code. It's due to the emp and libOTe both contain class of block.
+To fix that, go to every file in the emp containing "block" mentioned in the error messages, and change all the usage to "emp::block".
