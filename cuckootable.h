@@ -40,11 +40,9 @@ namespace osuCrypto
                 block temp_block = element;
                 u8 temp_hashid = curHash;
                 u64 temp_idx = idx;
-
                 element = items[cur_addr];
                 curHash = hashIds[cur_addr];
                 idx = item_idx[cur_addr];
-                
                 items[cur_addr] = temp_block;
                 hashIds[cur_addr] = temp_hashid;
                 item_idx[cur_addr] = temp_idx;
@@ -84,7 +82,7 @@ namespace osuCrypto
                 if(items[i]==toBlock(u64(0))){
                     std::cout<<"-1"<<std::endl;
                 }else{
-                    std::cout<<items[i]<<std::endl;
+                    std::cout<<items[i]<<" "<<item_idx[i]<<std::endl;
                 }
                 std::cout<<"-----------------------------------"<<std::endl;
             }
