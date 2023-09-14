@@ -22,21 +22,21 @@ using namespace std;
 using namespace osuCrypto;
 
 // Based on Goubin theorem
-vector<emp::Bit> _AgeqB(emp::NetIO *io, int party_id, long long number)
-{
-    // return 2 shares of x \geq y
-    emp::Integer A(128, number, ALICE); // x
-    emp::Integer r(128, -number, BOB);  //-y
-    emp::Integer u(128, 0, ALICE);
-    for (int i = 0; i < 128; i++)
-    {
-        u = (u & (A ^ r) ^ (A & r));
-        u = u + u;
-    }
-    vector<emp::Integer> z = {((A ^ u)), ((r))}; // z0 xor z1 = x-y
+// vector<emp::Bit> _AgeqB(emp::NetIO *io, int party_id, long long number)
+// {
+//     // return 2 shares of x \geq y
+//     emp::Integer A(128, number, ALICE); // x
+//     emp::Integer r(128, -number, BOB);  //-y
+//     emp::Integer u(128, 0, ALICE);
+//     for (int i = 0; i < 128; i++)
+//     {
+//         u = (u & (A ^ r) ^ (A & r));
+//         u = u + u;
+//     }
+//     vector<emp::Integer> z = {((A ^ u)), ((r))}; // z0 xor z1 = x-y
 
-    return {(z[0] >> 127).bits[0], !(z[1] >> 127).bits[0]};
-}
+//     return {(z[0] >> 127).bits[0], !(z[1] >> 127).bits[0]};
+// }
 
 // bool _AeqB(emp::NetIO *io, int party_id, long long number)
 // {
@@ -46,56 +46,56 @@ vector<emp::Bit> _AgeqB(emp::NetIO *io, int party_id, long long number)
 //     return getLSB(res.bit);
 // }
 
-// vector<bool> _AeqB(emp::NetIO *io, int party, vector<u64> numbers) {
-//     size_t share_size = numbers.size();
-//     vector<Integer> arr1(share_size);
-//     vector<Integer> arr2(share_size);
-//     vector<Bit> returns(share_size);
+vector<bool> _AeqB(emp::NetIO *io, int party, vector<u64> numbers) {
+    size_t share_size = numbers.size();
+    vector<Integer> arr1(share_size);
+    vector<Integer> arr2(share_size);
+    vector<Bit> returns(share_size);
 
-//     for (size_t i = 0; i < share_size; i++) 
-//         arr1[i] = Integer(64, numbers[i], ALICE);
-//     for (size_t i = 0; i < share_size; i++) 
-//         arr2[i] = Integer(64, numbers[i], BOB);
-//     for (size_t i = 0; i < share_size; i++) 
-//         returns[i] = (arr1[i] == arr2[i]);
+    for (size_t i = 0; i < share_size; i++) 
+        arr1[i] = Integer(64, numbers[i], ALICE);
+    for (size_t i = 0; i < share_size; i++) 
+        arr2[i] = Integer(64, numbers[i], BOB);
+    for (size_t i = 0; i < share_size; i++) 
+        returns[i] = (arr1[i] == arr2[i]);
     
 
-//     vector<bool> bS(share_size);
-//     for(size_t i = 0; i < share_size; ++i)
-//         bS[i] = getLSB(returns[i].bit);
+    vector<bool> bS(share_size);
+    for(size_t i = 0; i < share_size; ++i)
+        bS[i] = getLSB(returns[i].bit);
 
-//     return bS;
-// }
-vector<emp::Bit> _AeqB(emp::NetIO *io, int party_id, long long number){
-   if(true){
-       Integer a(128, number, ALICE);
-       Integer b(128, number, BOB);
-       Bit res = (b == a);
-       PRG prg;
-       bool r_;
-       prg.random_data(&r_,sizeof(bool));
-       Bit r2(r_);
-       Bit r1 = res^r2;
-       bool r1_ = r1.reveal<bool>();
-       if(party_id==0)
-           cout << r_ << " " << r1_ <<endl;
-       return {r1, r2};
-   }else{
-       auto x = _AgeqB(io, party_id, number);
-       auto y = _AgeqB(io, party_id, -number);
-       // auto z1 = (x[0]&y[0])^(x[0]&y[1]);
-       // auto z2 = (x[1]&y[0])^(x[1]&y[1]);
-       emp::PRG prg;
-       bool r_;
-       prg.random_data(&r_,1);
-       emp::Bit r(r_);
-       //simply doing secand
-       emp::Bit r2 = (r^(x[0]&y[1]))^(x[1]&y[0]);
-       emp::Bit z1 = r^(x[0]&y[0]);
-       emp::Bit z2 = r2^(x[1]&y[1]);
-       return {z1,z2};
-   }
+    return bS;
 }
+// vector<emp::Bit> _AeqB(emp::NetIO *io, int party_id, long long number){
+//    if(true){
+//        Integer a(128, number, ALICE);
+//        Integer b(128, number, BOB);
+//        Bit res = (b == a);
+//        PRG prg;
+//        bool r_;
+//        prg.random_data(&r_,sizeof(bool));
+//        Bit r2(r_);
+//        Bit r1 = res^r2;
+//        bool r1_ = r1.reveal<bool>();
+//        if(party_id==0)
+//            cout << r_ << " " << r1_ <<endl;
+//        return {r1, r2};
+//    }else{
+//        auto x = _AgeqB(io, party_id, number);
+//        auto y = _AgeqB(io, party_id, -number);
+//        // auto z1 = (x[0]&y[0])^(x[0]&y[1]);
+//        // auto z2 = (x[1]&y[0])^(x[1]&y[1]);
+//        emp::PRG prg;
+//        bool r_;
+//        prg.random_data(&r_,1);
+//        emp::Bit r(r_);
+//        //simply doing secand
+//        emp::Bit r2 = (r^(x[0]&y[1]))^(x[1]&y[0]);
+//        emp::Bit z1 = r^(x[0]&y[0]);
+//        emp::Bit z2 = r2^(x[1]&y[1]);
+//        return {z1,z2};
+//    }
+// }
 
 
 
@@ -152,33 +152,50 @@ vector<emp::Bit> _AeqB(emp::NetIO *io, int party_id, long long number){
 //     // }
 // }
 
-// void gc_test(){
-//     //thread
-// 	std::vector<std::thread>  pThrds(2);
-// 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
-// 	{
-// 		pThrds[pIdx] = std::thread([&, pIdx]() {
-// 			int port = 1000;
-//             int party = pIdx;
-//             long long num = pIdx+1;
-//             emp::NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
+void gc_test(){
+    //thread
+    u64 setSize = {1<<8};
+    setSize*=1.27;
+    std::cout<<setSize<<std::endl;
+    PRNG prng(_mm_set_epi32(4253465, 3431235, 232324, 123456));
+    std::vector<osuCrypto::block> a;
+    std::vector<u64> num(setSize);
+    for(int i = 0;i<setSize;i++){
+        a.push_back(prng.get<osuCrypto::block>());
+        memcpy(&num[i], &a[i], sizeof(u64));
+    }
+    // std::cout<<"1"<<std::endl;
+    Timer timer;
+	timer.reset();
 
-//             setup_semi_honest(io, party);
+	auto start = timer.setTimePoint("start");
+	std::vector<std::thread>  pThrds(2);
+	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
+	{   
+        // PRNG prng(_mm_set_epi32(4253465, 3431235, 232324, 123456));
+		pThrds[pIdx] = std::thread([&, pIdx]() {
+			int port = 1000;
+            int party = pIdx;
+            // long long num = pIdx+1;
+            // std::cout<<pIdx<<std::endl;
+            // emp::NetIO *io = new NetIO("127.0.0.1", 6000 );
+            emp::NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", 6000);
+            // std::cout<<pIdx<<std::endl;
 
-// 	        auto z = _AeqB(io,party, num);
-//             std::cout<<"point 3"<<std::endl;
-// 	        bool bS = z[0].reveal<bool>();
-// 	        bool bR = z[1].reveal<bool>();
-// 	        cout << "bs "<<bS <<endl;
-// 	        cout << "br "<<bR <<endl;
+            setup_semi_honest(io, party);
 
-// 		});
-// 	}
+	        auto z = _AeqB(io,party, num);
+            std::cout<<z[1]<<std::endl;
+            delete io;
 
-// 	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
-// 		pThrds[pIdx].join();
-
-// }
+		});
+	}
+    
+	for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
+		pThrds[pIdx].join();
+    auto end = timer.setTimePoint("end");
+    std::cout<<timer<<std::endl;
+}
 
 // int main(int argc, char** argv) {
 // 	int port, party;
