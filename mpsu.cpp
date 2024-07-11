@@ -6,7 +6,7 @@
 #include "oprf_mpsu.h"
 #include "libOTe/libOTe_Tests/OT_Tests.h"
 #include "hash_test.h"
-#include "chls_test.h"
+// #include "chls_test.h"
 #include "oprf_batch_mpsu.h"
 
 using namespace osuCrypto;
