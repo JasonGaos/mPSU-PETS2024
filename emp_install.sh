@@ -14,6 +14,12 @@ python modify_block.py --directory emp-sh2pc
 #change c++11 to c++14
 python modify_cmake.py --file emp-tool/cmake/emp-base.cmake
 
+# update sudo read
+sudo chmod 777 -R emp-tool/install_manifest.txt
+sudo chmod 777 -R emp-ot/install_manifest.txt
+sudo chmod 777 -R emp-sh2pc/install_manifest.txt
+
+
 # Install emp-toolkit libraries
 echo "Installing emp-toolkit libraries"
 echo "python install.py --deps --tool --ot --sh2pc"
