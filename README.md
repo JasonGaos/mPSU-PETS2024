@@ -1,4 +1,4 @@
-# Toward a Multi-party Private Set Union
+# mPSU-PETS2024
 
 **!! Requirement: C++14, CMake >= 3.18**
 
