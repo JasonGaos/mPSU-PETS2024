@@ -1,28 +1,35 @@
-# mpsu_emp_libote
+# Toward a Multi-party Private Set Union
 
-we have two dependency for mpsu project
+**!! Requirement: C++14, CMake >= 3.18**
 
-1. libOTe v1.5.1 of
-   
-commit 2363505431f744539027a873c2536b9ae3630ff7
-  
-  with Cryptotools of
-  
-  commit 139a4b0b53d2f2ed0bee53f8e9e6775d141ddb50
+## Make script files runable
+```
+sudo chmod +x build.sh libOTe_install.sh emp_install.sh run.sh
+```
 
-2. To have garble circuit we use a custimized library of emptools.
-https://github.com/personwhofloat/emptool_private_compare/tree/master
+## 1. Install libOTe
+This step is important, to install libOTe and related packages (relic, boost, sodium)
 
+```
+./libOTe_install.sh
+```
 
-to run the project,
+## 2. Install emp-toolkit 
 
-mkdir build
+This step is for us to install emp-tool, emp-ot, emp-sh2pc. Note that we also modify the code of emp-tool so that it is compatible with libOTe
 
-cd build
+```
+./emp_install.sh
+```
 
-cmake ..
+## 3. Build Script and Run
 
-make && ./mpsu.exe
+### Build
+```
+./build.sh
+```
 
-There will be an error messages for the first time to run the code. It's due to the emp and libOTe both contain class of block.
-To fix that, go to every file in the emp containing "block" mentioned in the error messages, and change all the usage to "emp::block".
+### Run
+```
+./run.sh
+```
