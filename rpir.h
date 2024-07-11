@@ -550,8 +550,8 @@ inline std::vector<osuCrypto::block> rpir_batched_receiver(std::vector<std::vect
 		// choices[i] = 1;
 	}
 	
-	*comm_recv += io->total_recv;
-	*comm_sent += io->total_sent;
+	// *comm_recv += io->total_recv;
+	// *comm_sent += io->total_sent;
 	delete io;
 	
 	// 3.2 ot extension
@@ -645,8 +645,8 @@ inline std::vector<std::array<osuCrypto::block, 2>> rpir_batched_sender(std::vec
 	auto b_s_vec = _AeqB(io, 2, numbers_to_compare);
 	// std::vector<u8> b_s_vec (numbers_to_compare.size());
 
-	*comm_recv += io->total_recv;
-	*comm_sent += io->total_sent;
+	// *comm_recv += io->total_recv;
+	// *comm_sent += io->total_sent;
 	delete io;
 	// 3.2 ot sender
 	PRNG prng(sysRandomSeed());
