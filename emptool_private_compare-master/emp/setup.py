@@ -18,13 +18,16 @@ else
 fi
 '''
 
-install_template ='''
-cd X
-cmake -DTHREADING=ON . -DCMAKE_INSTALL_PREFIX="/home/tson1997/research/psu_project/mpsu/build"
-make -j4 
-make install 
-cd ..
+install_template = '''
+git clone https://github.com/emp-toolkit/X.git --branch Y
 '''
+
+# '''cd X
+# cmake -DTHREADING=ON .
+# sudo make -j4
+# sudo make install
+# cd ..
+# '''
 
 import argparse
 parser = argparse.ArgumentParser()
