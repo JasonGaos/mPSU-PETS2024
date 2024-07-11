@@ -1,5 +1,6 @@
 import os
 import re
+# import argparse
 def replace_text_in_file(file_path, old_text, new_text):
     with open(file_path, 'r') as file:
         filedata = file.read()
@@ -22,6 +23,10 @@ def replace_text_in_directory(directory, old_text, new_text):
                 print(f"Replaced text in: {file_path}")
 
 if __name__ == "__main__":
-    directory = input("Enter the directory path: ")
+    from argparse import ArgumentParser
+    option = ArgumentParser()
+    option.add_argument("--directory", help="Directory path")
+    args = option.parse_args()
+    directory = args.directory
     replace_text_in_directory(directory, r'\bblock\b', 'empBlock')
 
