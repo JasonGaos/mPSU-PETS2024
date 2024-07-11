@@ -5,8 +5,6 @@ git submodule update --init
 
 # Checkout correct version
 cd libOTe
-git branch -d v1.5.4
-git checkout -b v1.5.4 2363505431f744539027a873c2536b9ae3630ff7
 git submodule update --init
 
 # Build libOTe
