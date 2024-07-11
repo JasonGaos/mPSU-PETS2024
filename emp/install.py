@@ -20,9 +20,9 @@ fi
 
 install_template ='''
 cd X
-cmake -DTHREADING=ON . -DCMAKE_INSTALL_PREFIX="/home/tson1997/research/psu_project/mpsu/build"
-make -j4 
-make install 
+cmake -DTHREADING=ON . 
+sudo make -j4 
+sudo make install 
 cd ..
 '''
 
