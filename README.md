@@ -1,6 +1,6 @@
 # mPSU-PETS2024
 
-**!! Requirement: C++14, CMake >= 3.18**
+**!! Tested environment: C++14, CMake >= 3.18, GCC-9**
 
 ## Make script files runable
 ```
