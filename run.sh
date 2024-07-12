@@ -2,5 +2,5 @@
 
 #run
 cd build
-./mpsu_test
+./mpsu_make
 cd ..
