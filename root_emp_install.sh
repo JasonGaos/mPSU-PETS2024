@@ -22,7 +22,7 @@ chmod 777 -R emp-sh2pc/install_manifest.txt
 
 # Install emp-toolkit libraries
 echo "Installing emp-toolkit libraries"
-echo "python install.py --deps --tool --ot --sh2pc"
-python3 install.py --deps --tool --ot --sh2pc
+echo "python root_install.py --deps --tool --ot --sh2pc"
+python3 root_install.py --deps --tool --ot --sh2pc
 
 

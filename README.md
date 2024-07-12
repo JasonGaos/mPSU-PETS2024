@@ -4,7 +4,7 @@
 
 ## Make script files runable
 ```
-sudo chmod +x build.sh libOTe_install.sh emp_install.sh run.sh
+sudo chmod +x *.sh
 ```
 
 ## 1. Install libOTe
@@ -20,6 +20,11 @@ This step is for us to install emp-tool, emp-ot, emp-sh2pc. Note that we also mo
 
 ```
 ./emp_install.sh
+```
+
+If install it with root 
+```
+./root_emp_install.sh
 ```
 
 ## 3. Build Script and Run
