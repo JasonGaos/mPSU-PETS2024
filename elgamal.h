@@ -1,5 +1,4 @@
 #pragma once
-// #include "cryptoTools/Crypto/Curve.h"
 #include <cryptoTools/Crypto/RCurve.h>
 #include <cryptoTools/Common/config.h>
 #include <cryptoTools/Common/Defines.h>
@@ -9,9 +8,6 @@
 #include <cryptoTools/Crypto/PRNG.h>
 #include <cryptoTools/Crypto/AES.h>
 #include <cryptoTools/Common/Timer.h>
-
-// #include "libOTe/TwoChooseOne/IknpOtExtReceiver.h"
-// #include "libOTe/TwoChooseOne/IknpOtExtSender.h"
 #include "gbf.h"
 #include "utl.h"
 #include <vector>
@@ -480,8 +476,8 @@ inline void ecc_channel_test()
 {
 
 	u64 setSize = 1 << 16;
-	u64 nParties = 2;
-
+	u64 nParties = 1;
+	u64 numThreads = 1;
 	// rerandomize test (ElGamal)
 	REllipticCurve curve; //(CURVE_25519)
 	PRNG prng(_mm_set_epi32(19249, 4923, 2335, 123));
@@ -611,26 +607,152 @@ inline void ecc_channel_test()
 		for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
 		{
 			pThrds[pIdx] = std::thread([&, pIdx]()
-									   { 
-										// Encryption and Decryption testing (ElGamal)
-										REllipticCurve curve; //(CURVE_25519)
-										const auto &g = curve.getGenerator();
+			{ 
+				// 1.key exchange
+				// Curve
+				REllipticCurve curve; //(CURVE_25519)
+				PRNG prng(_mm_set_epi32(19249, 4923, 234435, 1231));
+				PRNG prng_r(_mm_set_epi32(4253465, 3434565, 234435, 1231));
+				// generater g
+				const auto &g = curve.getGenerator();
+				// sk_i
+				std::vector<std::vector<u8>> s_keys; // 32 Bytes
+				// g^sk_i
+				std::vector<std::vector<u8>> g_sks; // 33 Bytes, y at index[][0]
 
-										REccNumber r(curve);
-										r.randomize(prng_enc);
+				for (u64 i = 0; i < nParties; i++)
+				{
+					REccNumber sk(curve);
+					sk.randomize(prng);
+					std::vector<u8> b(sk.sizeBytes());
+					sk.toBytes(b.data());
+					s_keys.push_back(b);
+					std::vector<u8> c(g.sizeBytes());
+					REccPoint g_sk = g * sk;
+					g_sk.toBytes(c.data());
+					g_sks.push_back(c);
+				}
+				// pk
+				REccNumber sk0;
+				sk0.fromBytes(s_keys[0].data());
+				REccPoint pk = g * sk0; // pk
 
-										REccPoint c1;//= g * r;
-										Timer timer1;
-										timer1.reset();
-										
-										auto start1 = timer1.setTimePoint("start");
+				for (u64 i = 1; i < s_keys.size(); i++)
+				{
+					REccNumber ski;
+					ski.fromBytes(s_keys[i].data());
+					pk += g * ski; // pk
+				}
 
-										for(int i = 0;i<inputSet_u8[0].size();i++){
-											c1 = c1 + g*r;
-											//encryption_r(inputSet_u8[0][i],pk_vec,prng_enc);
-										} 
-										auto end1 = timer1.setTimePoint("end");
-										std::cout << timer1 << std::endl; });
+				std::vector<u8> pk_vec(g.sizeBytes());
+				pk.toBytes(pk_vec.data());
+
+				// partial pks
+				std::vector<REccPoint> par_pks;
+				REccPoint par_pk = pk;
+				par_pks.push_back(pk);
+				for (u64 i = 1; i < s_keys.size(); i++)
+				{
+					REccNumber ski;
+					ski.fromBytes(s_keys[i].data());
+					par_pk -= g * ski;
+					par_pks.push_back(par_pk);
+				}
+
+				// AES_KEY for OPRF
+				PRNG prngAES(_mm_set_epi32(123, 3434565, 234435, 23987054));
+				std::vector<osuCrypto::block> AES_keys;
+				for (u64 i = 0; i < nParties; i++)
+				{
+					AES_keys.push_back(prngAES.get<osuCrypto::block>());
+				}
+
+				PRNG prng_enc(_mm_set_epi32(4253465, 3434565, 234435, 1231));
+
+				//-------------multi-thread part for encryption----------------
+				// All the parties compute the X' = Enc(pk,X)
+				// encrypt_set: setSize * 2 * 33 u8 vector
+				// All the parties compute the Enc(pk,0)
+				// setSize * 2 * 33 u8 vector
+				std::vector<std::vector<u8>> zero_ctx(2, std::vector<u8>(33, 0));
+				std::vector<std::vector<std::vector<u8>>> encrypt_set(inputSet_u8[0].size(), zero_ctx);
+				std::vector<std::thread> threads(numThreads);
+				u64 tablesize = inputSet_u8[0].size()*1.27;
+				u64 batch_size1 = inputSet_u8[0].size() / numThreads;
+				std::vector<std::vector<std::vector<u8>>> encrypt_zero_set(inputSet_u8[0].size()*1.27, zero_ctx);
+				std::vector<std::vector<std::vector<u8>>> rerandomize_set(inputSet_u8[0].size()*1.27, zero_ctx);
+				std::vector<u8> zero_u8(32, 0);
+
+				u64 batch_size2 = tablesize/ numThreads;
+
+				// Timer timer;
+				// timer.reset();
+				// auto start = timer.setTimePoint("start");
+				for (int t = 0; t < numThreads; t++)
+				{
+					threads[t] = std::thread([&, t]()
+											{
+						if(t!=numThreads-1){
+							
+				
+							for (u64 i = 0; i < batch_size2; i++){
+								std::vector<std::vector<u8>> ciphertext = encryption(zero_u8, pk_vec, prng_enc);
+								encrypt_zero_set[i+t*batch_size2] = ciphertext;
+							}
+						}else{
+							
+				
+							for (u64 i = t*batch_size2; i < tablesize; i++){
+								std::vector<std::vector<u8>> ciphertext = encryption(zero_u8, pk_vec, prng_enc);
+								encrypt_zero_set[i] = ciphertext;
+							}
+							Timer timer;
+							timer.reset();
+							auto start = timer.setTimePoint("start");
+							for (u64 i = t*batch_size2; i < encrypt_zero_set.size(); i++){	
+								std::vector<std::vector<u8>> ciphertext = rerandomize(encrypt_zero_set[i+t*batch_size2], pk_vec);
+								rerandomize_set[i] = ciphertext;
+							}
+							auto end = timer.setTimePoint("end_rerandomize test");
+							std::cout<<timer<<std::endl;
+						} });
+				}
+				for (int t = 0; t < numThreads; t++)
+				{
+					threads[t].join();
+				}
+				
+				
+				// std::vector<std::thread> threads2(numThreads);
+
+				// for (int t = 0; t < numThreads; t++)
+				// {	
+				// 	std::cout<<t<<std::endl;
+				// 	threads2[t] = std::thread([&, t]()
+				// 							{
+				// 		if(t!=numThreads-1){
+				// 			for (u64 i = 0; i < batch_size2; i++){	
+				// 				std::cout<<i<<std::endl;
+				// 				std::vector<std::vector<u8>> ciphertext = rerandomize(encrypt_zero_set[i+t*batch_size2], pk_vec);
+				// 				std::cout<<i<<std::endl;
+				// 				rerandomize_set[i+t*batch_size2] = ciphertext;
+				// 			}			
+				// 		}else{
+				// 			for (u64 i = t*batch_size2; i < encrypt_zero_set.size(); i++){	
+				// 				std::vector<std::vector<u8>> ciphertext = rerandomize(encrypt_zero_set[i+t*batch_size2], pk_vec);
+				// 				rerandomize_set[i] = ciphertext;
+				// 			}
+				// 		} });
+				// }
+
+				
+				// for (int t = 0; t < numThreads; t++)
+				// {
+				// 	threads2[t].join();
+				// }
+				// auto end = timer.setTimePoint("end_rerandomize test");
+				// std::cout<<timer<<std::endl;
+			});
 		}
 
 		for (u64 pIdx = 0; pIdx < pThrds.size(); ++pIdx)
@@ -661,84 +783,4 @@ inline void ecc_channel_test()
 
 		ios.stop();
 	}
-}
-
-inline void convert_test()
-{
-	REllipticCurve curve; //(CURVE_25519)
-	PRNG prng(_mm_set_epi32(19249, 4923, 2335, 123));
-	PRNG prng_r(_mm_set_epi32(4253465, 3434565, 23443, 1231));
-	PRNG prng_enc(_mm_set_epi32(42512365, 3434565, 23443, 1231));
-	// generater g
-	const auto &g = curve.getGenerator();
-	// std::cout <<g.sizeBytes()<< std::endl;
-	// sk
-	REccNumber sk(curve);
-	sk.randomize(prng);
-	std::vector<u8> sk_vec(g.sizeBytes() - 1);
-	sk.toBytes(sk_vec.data());
-
-	Timer timer1;
-	timer1.reset();
-	auto start1 = timer1.setTimePoint("start");
-
-	for (u64 i = 0; i < 1024 * 1024; i++)
-	{
-		std::vector<u8> u8_vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
-		// print_u8vec(u8_vec);
-		//  osuCrypto::block b = prng.get<osuCrypto::block>();
-		osuCrypto::block b = toBlock(u64(1));
-		// std::cout<<b<<std::endl;
-
-		osuCrypto::block *b_ptr = (osuCrypto::block *)u8_vec.data() + 1;
-		b = *b_ptr;
-
-		// std::cout<<b<<std::endl;
-
-		// std::cout<<std::hex<<unsigned(u8_vec[15])<<std::endl;
-		// std::cout<<u8vec_to_block(u8_vec,32)<<std::endl;
-	}
-
-	auto end1 = timer1.setTimePoint("end");
-
-	std::cout << timer1 << std::endl;
-
-	Timer timer2;
-	timer2.reset();
-	auto start2 = timer2.setTimePoint("start");
-
-	for (u64 i = 0; i < 1024 * 1024; i++)
-	{
-		std::vector<u8> u8_vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
-		// print_u8vec(u8_vec);
-		//  osuCrypto::block b = prng.get<osuCrypto::block>();
-		osuCrypto::block b = toBlock(u64(1));
-		// std::cout<<b<<std::endl;
-
-		b = u8vec_to_block(u8_vec, 32);
-		// osuCrypto::block *b_ptr =  (osuCrypto::block*) u8_vec.data()+1;
-		// b = *b_ptr;
-
-		// std::cout<<b<<std::endl;
-
-		// std::cout<<std::hex<<unsigned(u8_vec[15])<<std::endl;
-		// std::cout<<u8vec_to_block(u8_vec,32)<<std::endl;
-	}
-
-	auto end2 = timer2.setTimePoint("end");
-
-	std::cout << timer2 << std::endl;
-	// std::vector<u8> u8_vec2(16,1);
-	// std::vector<osuCrypto::block> a = {b};
-	// std::cout<<&b<<std::endl;
-
-	// std::vector<u8>* u8_ptr = new std::vector<u8>(16);
-
-	// u8_ptr = (std::vector<u8>*) &b;
-	// std::cout<<(*u8_ptr).size()<<std::endl;
-	// print_u8vec(*u8_ptr);
-	// std::cout<<(*u8_ptr).size()<<std::endl;
-	// u8_vec2 = *u8_ptr;
-	// std::cout<<"123"<<std::endl;
-	// print_u8vec(u8_vec2);
 }
